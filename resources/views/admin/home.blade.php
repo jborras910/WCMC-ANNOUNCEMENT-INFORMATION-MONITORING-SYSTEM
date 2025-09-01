@@ -151,369 +151,118 @@
                                         @endif
                                         <th class="text-center">Status</th>
                                         <th class="text-center">Action</th>
-
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($slides as $index => $slide)
-                                        @if ($slide->added_by_email == Auth()->user()->email)
-                                            <tr>
+                                        <tr>
 
-                                                <td>
-                                                    {{ $index + 1 }}
-                                                </td>
+                                            <td>
+                                                {{ $index + 1 }}
+                                            </td>
 
-                                                <td>
+                                            <td>
 
-                                                    {{-- <video width="300" height="200" controls preload="metadata" muted>
-                                                        <source src="{{ asset('image_upload/' . $slide->file) }}"
-                                                            type="video/mp4">
-                                                    </video> --}}
+                                                <video width="300" height="200" control autoplay muted>
+                                                    <source src="{{ 'image_upload/' . $slide->file }}" type="video/mp4">
 
-
-                                                </td>
-                                                @if (Auth()->user()->role !== 'user')
-                                                    <td>{{ $slide->department }}</td>
-                                                @endif
-                                                <td class="text-uppercase text-center"
-                                                    style="color: {{ $slide->status === 'pending' || $slide->status === 'rejected' ? 'red' : 'green' }}">
-                                                    {{ $slide->status }}
-                                                </td>
-                                                <td class="text-center">
-                                                    <a class="btn btn-success text-light"
-                                                        href="{{ route('slide.edit', ['slide' => $slide]) }}"><i
-                                                            class="fa-solid fa-pen-to-square mr-2"></i>Edit</a>
-                                                    <!-- Button trigger modal -->
+                                                </video>
 
 
 
-                                                    <button type="button" class="btn btn-danger text-light"
-                                                        data-toggle="modal"
-                                                        data-target="#exampleModalCenter{{ $slide->id }}">
-                                                        <i class="fa-solid fa-trash mr-2"></i>Delete
-                                                    </button>
-                                                    <!-- Modal -->
-                                                    <form method="post"
-                                                        action="{{ route('deleteSlide.destroy', ['slide' => $slide]) }}">
-                                                        @csrf
-                                                        @method('delete')
-                                                        <div class="modal fade" id="exampleModalCenter{{ $slide->id }}"
-                                                            tabindex="-1" role="dialog"
-                                                            aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                                                            <div class="modal-dialog modal-dialog-centered" role="document">
-                                                                <div class="modal-content">
-                                                                    <div class="modal-header">
-                                                                        <h5 class="modal-title" id="exampleModalLongTitle">
-                                                                            Are you sure you
-                                                                            want to delete this slide?</h5>
+                                            </td>
+                                            @if (Auth()->user()->role !== 'user')
+                                                <td>{{ $slide->department }}</td>
+                                            @endif
+                                            <td class="text-uppercase text-center"
+                                                style="color: {{ $slide->status === 'pending' || $slide->status === 'rejected' ? 'red' : 'green' }}">
+                                                {{ $slide->status }}
+                                            </td>
+                                            <td class="text-center">
+                                                <a class="btn btn-success text-light"
+                                                    href="{{ route('slide.edit', ['slide' => $slide]) }}"><i
+                                                        class="fa-solid fa-pen-to-square mr-2"></i>Edit</a>
+                                                <!-- Button trigger modal -->
 
 
-                                                                        <button type="button" class="close"
-                                                                            data-dismiss="modal" aria-label="Close">
-                                                                            <span aria-hidden="true">&times;</span>
-                                                                        </button>
-                                                                    </div>
-                                                                    <div class="modal-body">
-                                                                        {{-- Determine the file type --}}
-                                                                        @php
-                                                                            $extension = pathinfo(
-                                                                                $slide->file,
-                                                                                PATHINFO_EXTENSION,
-                                                                            );
-                                                                        @endphp
-                                                                        @if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png' || $extension == 'gif')
-                                                                            {{-- Display the image --}}
-                                                                            <img style="width:100%; height: 400px; border-radius: 0px;"
+
+                                                <button type="button" class="btn btn-danger text-light" data-toggle="modal"
+                                                    data-target="#exampleModalCenter{{ $slide->id }}">
+                                                    <i class="fa-solid fa-trash mr-2"></i>Delete
+                                                </button>
+                                                <!-- Modal -->
+                                                <form method="post"
+                                                    action="{{ route('deleteSlide.destroy', ['slide' => $slide]) }}">
+                                                    @csrf
+                                                    @method('delete')
+                                                    <div class="modal fade" id="exampleModalCenter{{ $slide->id }}"
+                                                        tabindex="-1" role="dialog"
+                                                        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="exampleModalLongTitle">
+                                                                        Are you sure you
+                                                                        want to delete this slide?</h5>
+
+
+                                                                    <button type="button" class="close"
+                                                                        data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    {{-- Determine the file type --}}
+                                                                    @php
+                                                                        $extension = pathinfo(
+                                                                            $slide->file,
+                                                                            PATHINFO_EXTENSION,
+                                                                        );
+                                                                    @endphp
+                                                                    @if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png' || $extension == 'gif')
+                                                                        {{-- Display the image --}}
+                                                                        <img style="width:100%; height: 400px; border-radius: 0px;"
+                                                                            src="{{ 'image_upload/' . $slide->file }}"
+                                                                            alt="">
+                                                                    @elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov' || $extension == 'wmv')
+                                                                        {{-- Display the video --}}
+                                                                        <video style="width:100%" controls>
+                                                                            <source
                                                                                 src="{{ 'image_upload/' . $slide->file }}"
-                                                                                alt="">
-                                                                        @elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov' || $extension == 'wmv')
-                                                                            {{-- Display the video --}}
-                                                                            <video style="width:100%" controls>
-                                                                                <source
-                                                                                    src="{{ 'image_upload/' . $slide->file }}"
-                                                                                    type="video/mp4">
-                                                                                Your browser does not support the video tag.
-                                                                            </video>
+                                                                                type="video/mp4">
+                                                                            Your browser does not support the video tag.
+                                                                        </video>
+                                                                        {{-- <h1>1</h1> --}}
 
-                                                                            <input type="hidden" name="user_add_name"
-                                                                                value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
-                                                                            <input type="hidden" name="user_add_email"
-                                                                                value="{{ Auth()->user()->email }}">
-                                                                            <input type="hidden" name="user_add_activity"
-                                                                                value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name . ' Deleted Slide' }}">
-                                                                        @else
-                                                                            {{-- Display a link to download the document --}}
-                                                                            <iframe style="width:100%" class="pdf"
+                                                                        <input type="hidden" name="user_add_name"
+                                                                            value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
+                                                                        <input type="hidden" name="user_add_email"
+                                                                            value="{{ Auth()->user()->email }}">
+                                                                        <input type="hidden" name="user_add_activity"
+                                                                            value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name . ' Deleted Slide' }}">
+                                                                    @else
+                                                                        {{-- Display a link to download the document --}}
+                                                                        <video style="width:100%" controls>
+                                                                            <source
                                                                                 src="{{ 'image_upload/' . $slide->file }}"
-                                                                                width="400" height="400"></iframe>
-                                                                            {{-- <a href="{{'image_upload/'.$slide->file}}" download>{{$slide->file}}</a> --}}
-                                                                        @endif
+                                                                                type="video/mp4">
+                                                                            Your browser does not support the video tag.
+                                                                        </video>
+                                                                    @endif
 
-                                                                    </div>
-                                                                    <div class="modal-footer text-light text-center">
-                                                                        <button type="submit"
-                                                                            class="btn btn-danger text-light">Delete</button>
-                                                                        <button type="button" class="btn btn-secondary"
-                                                                            data-dismiss="modal">Close</button>
-                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer text-light text-center">
+                                                                    <button type="submit"
+                                                                        class="btn btn-danger text-light">Delete</button>
+                                                                    <button type="button" class="btn btn-secondary"
+                                                                        data-dismiss="modal">Close</button>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        @elseif(Auth()->user()->role !== 'user')
-                                            <tr class="">
-                                                <td>
-                                                    {{ $index + 1 }}
-                                                </td>
-                                                <td>
-
-
-
-                                                    <video width="300" height="200" control autoplay muted>
-                                                        <source src="{{ 'image_upload/' . $slide->file }}"
-                                                            type="video/mp4">
-
-                                                    </video>
-
-
-
-
-                                                </td>
-                                                @if (Auth()->user()->role !== 'user')
-                                                    <td>{{ $slide->department }}</td>
-                                                    <td class="text-uppercase text-center"
-                                                        style="color: {{ $slide->status === 'pending' || $slide->status === 'rejected' ? 'red' : 'green' }}">
-                                                        {{ $slide->status }}
-                                                    </td>
-                                                @endif
-
-                                                @if ($slide->status === 'pending')
-                                                    <td class="text-center">
-                                                        <Button class="btn btn-warning text-light" data-toggle="modal"
-                                                            data-target="#exampleModalCenter{{ $slide->id }}"><i
-                                                                class="fa-solid fa-eye mr-2"></i>Publish</Button>
-                                                        <button type="button" class="btn btn-danger text-light"
-                                                            data-toggle="modal"
-                                                            data-target="#exampleModalCenter_2{{ $slide->id }}"><i
-                                                                class="fa-solid fa-ban mr-2"></i>Reject</button>
-                                                        <!-- Modal -->
-                                                        <form method="post"
-                                                            action="{{ route('slide.reject', ['slide' => $slide]) }}">
-                                                            @csrf
-                                                            @method('put')
-                                                            <div class="modal fade"
-                                                                id="exampleModalCenter_2{{ $slide->id }}"
-                                                                tabindex="-1" role="dialog"
-                                                                aria-labelledby="exampleModalCenterTitle"
-                                                                aria-hidden="true">
-                                                                <div class="modal-dialog modal-dialog-centered"
-                                                                    role="document">
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header">
-                                                                            <h5 class="modal-title"
-                                                                                id="exampleModalLongTitle">Are you sure you
-                                                                                want to delete this slide?</h5>
-
-
-                                                                            <button type="button" class="close"
-                                                                                data-dismiss="modal" aria-label="Close">
-                                                                                <span aria-hidden="true">&times;</span>
-                                                                            </button>
-                                                                        </div>
-                                                                        <div class="modal-body">
-                                                                            {{-- Determine the file type --}}
-                                                                            @php
-                                                                                $extension = pathinfo(
-                                                                                    $slide->file,
-                                                                                    PATHINFO_EXTENSION,
-                                                                                );
-                                                                            @endphp
-                                                                            @if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png' || $extension == 'gif')
-                                                                                {{-- Display the image --}}
-                                                                                <img style="width:100%; height: 400px; border-radius: 0px;"
-                                                                                    src="{{ 'image_upload/' . $slide->file }}"
-                                                                                    alt="">
-                                                                            @elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov' || $extension == 'wmv')
-                                                                                {{-- Display the video --}}
-                                                                                <video style="width:100%" controls>
-                                                                                    <source
-                                                                                        src="{{ 'image_upload/' . $slide->file }}"
-                                                                                        type="video/mp4">
-                                                                                    Your browser does not support the video
-                                                                                    tag.
-                                                                                </video>
-
-                                                                                <input type="hidden" name="user_add_name"
-                                                                                    value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
-                                                                                <input type="hidden"
-                                                                                    name="user_add_email"
-                                                                                    value="{{ Auth()->user()->email }}">
-                                                                                <input type="hidden"
-                                                                                    name="user_add_activity"
-                                                                                    value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name . ' rejected Slide' }}">
-                                                                            @else
-                                                                                {{-- Display a link to download the document --}}
-                                                                                <iframe style="width:100%" class="pdf"
-                                                                                    src="{{ 'image_upload/' . $slide->file }}"
-                                                                                    width="400"
-                                                                                    height="400"></iframe>
-                                                                                {{-- <a href="{{'image_upload/'.$slide->file}}" download>{{$slide->file}}</a> --}}
-                                                                            @endif
-
-                                                                        </div>
-                                                                        <div class="modal-footer text-light">
-                                                                            <button type="submit"
-                                                                                class="btn btn-danger text-light">Delete</button>
-                                                                            <button type="button"
-                                                                                class="btn btn-secondary"
-                                                                                data-dismiss="modal">Close</button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </form>
-
-                                                        <form method="post"
-                                                            action="{{ route('slide.publishFile', ['slide' => $slide]) }}">
-                                                            @csrf
-                                                            @method('put') <!-- Use 'put' method -->
-                                                            <div class="modal fade"
-                                                                id="exampleModalCenter{{ $slide->id }}" tabindex="-1"
-                                                                role="dialog" aria-labelledby="exampleModalCenterTitle"
-                                                                aria-hidden="true">
-                                                                <div class="modal-dialog modal-dialog-centered"
-                                                                    role="document">
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header">
-                                                                            <h5 class="modal-title"
-                                                                                id="exampleModalLongTitle">Are you sure you
-                                                                                want to publish this file?</h5>
-
-
-                                                                            <button type="button" class="close"
-                                                                                data-dismiss="modal" aria-label="Close">
-                                                                                <span aria-hidden="true">&times;</span>
-                                                                            </button>
-                                                                        </div>
-                                                                        <div class="modal-body">
-                                                                            <video style="width:100%" controls>
-                                                                                <source
-                                                                                    src="{{ 'image_upload/' . $slide->file }}"
-                                                                                    type="video/mp4">
-                                                                                Your browser does not support the video tag.
-                                                                            </video>
-
-                                                                            <input type="hidden" name="user_add_name"
-                                                                                value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
-                                                                            <input type="hidden" name="user_add_email"
-                                                                                value="{{ Auth()->user()->email }}">
-                                                                            <input type="hidden" name="user_add_activity"
-                                                                                value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name . ' Publish the slide' }}">
-                                                                        </div>
-                                                                        <div class="modal-footer text-light text-center">
-                                                                            <button type="submit"
-                                                                                class="btn btn-warning  text-light">Publish</button>
-                                                                            <button type="button"
-                                                                                class="btn btn-secondary"
-                                                                                data-dismiss="modal">Close</button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </form>
-                                                    </td>
-                                                @else
-                                                    <td class="text-center">
-                                                        <a class="btn btn-success text-light"
-                                                            href="{{ route('slide.edit', ['slide' => $slide]) }}"><i
-                                                                class="fa-solid fa-pen-to-square mr-2"></i>Edit</a>
-                                                        <!-- Button trigger modal -->
-                                                        <button type="button" class="btn btn-danger text-light"
-                                                            data-toggle="modal"
-                                                            data-target="#exampleModalCenter{{ $slide->id }}">
-                                                            <i class="fa-solid fa-trash mr-2"></i>Delete
-                                                        </button>
-                                                        <!-- Modal -->
-                                                        <form method="post"
-                                                            action="{{ route('deleteSlide.destroy', ['slide' => $slide]) }}">
-                                                            @csrf
-                                                            @method('delete')
-                                                            <div class="modal fade"
-                                                                id="exampleModalCenter{{ $slide->id }}" tabindex="-1"
-                                                                role="dialog" aria-labelledby="exampleModalCenterTitle"
-                                                                aria-hidden="true">
-                                                                <div class="modal-dialog modal-dialog-centered"
-                                                                    role="document">
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header">
-                                                                            <h5 class="modal-title"
-                                                                                id="exampleModalLongTitle">Are you sure you
-                                                                                want to delete this slide?</h5>
-
-
-                                                                            <button type="button" class="close"
-                                                                                data-dismiss="modal" aria-label="Close">
-                                                                                <span aria-hidden="true">&times;</span>
-                                                                            </button>
-                                                                        </div>
-                                                                        <div class="modal-body">
-                                                                            {{-- Determine the file type --}}
-                                                                            @php
-                                                                                $extension = pathinfo(
-                                                                                    $slide->file,
-                                                                                    PATHINFO_EXTENSION,
-                                                                                );
-                                                                            @endphp
-                                                                            @if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png' || $extension == 'gif')
-                                                                                {{-- Display the image --}}
-                                                                                <img style="width:100%; height: 400px; border-radius: 0px;"
-                                                                                    src="{{ 'image_upload/' . $slide->file }}"
-                                                                                    alt="">
-                                                                            @elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov' || $extension == 'wmv')
-                                                                                {{-- Display the video --}}
-                                                                                <video style="width:100%" controls>
-                                                                                    <source
-                                                                                        src="{{ 'image_upload/' . $slide->file }}"
-                                                                                        type="video/mp4">
-                                                                                    Your browser does not support the video
-                                                                                    tag.
-                                                                                </video>
-
-                                                                                <input type="hidden" name="user_add_name"
-                                                                                    value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
-                                                                                <input type="hidden"
-                                                                                    name="user_add_email"
-                                                                                    value="{{ Auth()->user()->email }}">
-                                                                                <input type="hidden"
-                                                                                    name="user_add_activity"
-                                                                                    value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name . ' Deleted Slide' }}">
-                                                                            @else
-                                                                                {{-- Display a link to download the document --}}
-                                                                                <iframe style="width:100%" class="pdf"
-                                                                                    src="{{ 'image_upload/' . $slide->file }}"
-                                                                                    width="400"
-                                                                                    height="400"></iframe>
-                                                                                {{-- <a href="{{'image_upload/'.$slide->file}}" download>{{$slide->file}}</a> --}}
-                                                                            @endif
-
-                                                                        </div>
-                                                                        <div class="modal-footer text-light">
-                                                                            <button type="submit"
-                                                                                class="btn btn-danger text-light">Delete</button>
-                                                                            <button type="button"
-                                                                                class="btn btn-secondary"
-                                                                                data-dismiss="modal">Close</button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </form>
-                                                    </td>
-                                                @endif
-                                            </tr>
-                                        @endif
+                                                    </div>
+                                                </form>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
                             </table>
