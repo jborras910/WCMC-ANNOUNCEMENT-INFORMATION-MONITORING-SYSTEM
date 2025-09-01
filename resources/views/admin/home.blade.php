@@ -212,43 +212,11 @@
                                                                     </button>
                                                                 </div>
                                                                 <div class="modal-body">
-                                                                    {{-- Determine the file type --}}
-                                                                    @php
-                                                                        $extension = pathinfo(
-                                                                            $slide->file,
-                                                                            PATHINFO_EXTENSION,
-                                                                        );
-                                                                    @endphp
-                                                                    @if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png' || $extension == 'gif')
-                                                                        {{-- Display the image --}}
-                                                                        <img style="width:100%; height: 400px; border-radius: 0px;"
-                                                                            src="{{ 'image_upload/' . $slide->file }}"
-                                                                            alt="">
-                                                                    @elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov' || $extension == 'wmv')
-                                                                        {{-- Display the video --}}
-                                                                        <video style="width:100%" controls>
-                                                                            <source
-                                                                                src="{{ 'image_upload/' . $slide->file }}"
-                                                                                type="video/mp4">
-                                                                            Your browser does not support the video tag.
-                                                                        </video>
-                                                                        {{-- <h1>1</h1> --}}
-
-                                                                        <input type="hidden" name="user_add_name"
-                                                                            value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
-                                                                        <input type="hidden" name="user_add_email"
-                                                                            value="{{ Auth()->user()->email }}">
-                                                                        <input type="hidden" name="user_add_activity"
-                                                                            value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name . ' Deleted Slide' }}">
-                                                                    @else
-                                                                        {{-- Display a link to download the document --}}
-                                                                        <video style="width:100%" controls>
-                                                                            <source
-                                                                                src="{{ 'image_upload/' . $slide->file }}"
-                                                                                type="video/mp4">
-                                                                            Your browser does not support the video tag.
-                                                                        </video>
-                                                                    @endif
+                                                                    <video style="width:100%" controls>
+                                                                        <source src="{{ 'image_upload/' . $slide->file }}"
+                                                                            type="video/mp4">
+                                                                        Your browser does not support the video tag.
+                                                                    </video>
 
                                                                 </div>
                                                                 <div class="modal-footer text-light text-center">
