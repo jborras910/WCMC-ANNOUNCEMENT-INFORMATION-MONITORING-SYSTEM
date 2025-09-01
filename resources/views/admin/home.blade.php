@@ -165,10 +165,10 @@
 
                                                 <td>
 
-                                                    <video width="300" height="200" controls preload="metadata" muted>
+                                                    {{-- <video width="300" height="200" controls preload="metadata" muted>
                                                         <source src="{{ asset('image_upload/' . $slide->file) }}"
                                                             type="video/mp4">
-                                                    </video>
+                                                    </video> --}}
 
 
                                                 </td>
