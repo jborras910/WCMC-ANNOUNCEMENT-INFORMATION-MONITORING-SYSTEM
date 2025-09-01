@@ -15,6 +15,7 @@
   padding: 0;
   transition-timing-function: ease-in !important;
 
+
 }
 
 </style>
@@ -24,11 +25,16 @@
        src="https://kit.fontawesome.com/6cea1e7bdb.js"
        crossorigin="anonymous"
      ></script>
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ asset('vendors/mdi/css/materialdesignicons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendors/base/vendor.bundle.base.css') }}">
     <link rel="stylesheet" href="{{ asset('vendors/datatables.net-bs4/dataTables.bootstrap4.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+
+
+    {{-- <link rel="stylesheet" href="{{asset('data-table/assets/css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{asset('data-table/assets/css/datatables.min.css')}}"> --}}
+
 
 
     <script src="{{ asset('sweetAlert/sweetAlert.js') }}"></script>
@@ -80,12 +86,13 @@
                   </span>
                 </div>
                 <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Search now"
-                  aria-label="search"
-                  aria-describedby="search"
-                />
+                id="searchInput"
+                type="text"
+                class="form-control"
+                placeholder="Search now"
+                aria-label="search"
+                aria-describedby="search"
+              />
               </div>
             </li>
 
@@ -101,8 +108,8 @@
                 data-bs-toggle="dropdown"
                 id="profileDropdown"
               >
-                <img class="border" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm0FWrcJLDYw6_WHnt7Wgyqcm91PlSlb3EGXdwHlg2UUj4cua583wsckrfxi6ipl7vWsg&usqp=CAU" alt="profile" />
-                <span class="nav-profile-name">{{Auth()->user()->email}}</span>
+                <img  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm0FWrcJLDYw6_WHnt7Wgyqcm91PlSlb3EGXdwHlg2UUj4cua583wsckrfxi6ipl7vWsg&usqp=CAU" alt="profile" />
+                <span class="nav-profile-name">{{Auth()->user()->username}}</span>
               </a>
               <div
                 class="dropdown-menu dropdown-menu-right navbar-dropdown"
@@ -134,16 +141,26 @@
                 <span  class="menu-title">Dashboard</span>
               </a>
             </li>
-            @if(Auth()->user()->role ==='admin')
+            @if(Auth()->user()->role ==='master admin')
             <li class="nav-item">
               <a class="nav-link" href="{{route('admin.users')}}">
-                <i class="mdi mdi-account menu-icon"></i>
+                <i class="mdi mdi-account-multiple  menu-icon"></i>
                 <span class="menu-title">Users</span>
               </a>
             </li>
             @endif
+            @if(Auth()->user()->role !=='user')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('pendingSlides') }}">
+                  <i class="mdi mdi-lan-pending  menu-icon"></i>
+                  <span  class="menu-title">Pending slides</span>
+                  @if($slidesPending !== 0)
+                  <span style="padding: 1px 10px;" class="bg-danger ml-5 text-light rounded-circle">{{$slidesPending}}</span>
+                  @endif
 
-
+                </a>
+              </li>
+              @endif
             <li class="nav-item">
               <a class="nav-link" href="{{ route('admin.activity') }}">
                 <i class="mdi mdi-circle-outline menu-icon"></i>
@@ -193,10 +210,41 @@
     <script src="{{ asset('js/dataTables.bootstrap4.js') }}"></script>
     <script src="{{ asset('js/jquery.cookie.js') }}" type="text/javascript"></script>
 
+    {{-- <script src="data-table/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="data-table/assets/js/jquery-3.6.0.min.js"></script>
+    <script src="data-table/assets/js/datatables.min.js"></script>
+    <script src="data-table/assets/js/pdfmake.min.js"></script>
+    <script src="data-table/assets/js/vfs_fonts.js"></script>
+    <script src="data-table/assets/js/custom.js"></script> --}}
+
 
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
+<!-- JavaScript code for search functionality -->
+<script>
+    // Function to handle form submission with search query
+    function submitSearch() {
+      // Get the search query value
+      var query = document.getElementById('searchInput').value.trim();
 
+      // If the query is not empty
+      if (query !== '') {
+        // Redirect the user to a new URL with the search query as a parameter
+        window.location.href = encodeURIComponent(query);
+      }
+    }
+
+    // Add event listener to the search input field
+    document.getElementById('searchInput').addEventListener('keydown', function(event) {
+      // Check if the Enter key is pressed
+      if (event.key === 'Enter') {
+        // Prevent the default form submission behavior
+        event.preventDefault();
+        // Submit the search query
+        submitSearch();
+      }
+    });
+  </script>
 
 
   </body>

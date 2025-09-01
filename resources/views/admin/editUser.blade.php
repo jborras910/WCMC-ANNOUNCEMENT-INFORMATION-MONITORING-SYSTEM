@@ -57,16 +57,19 @@
         {{-- <h3 class="page-header"><i class="fa-solid fa-user mr-2"></i>Users Table</h3> --}}
         <div class="card">
             <div class="card-body">
-
-
+                <div class="d-flex justify-content-between">
+                    <div class="">
+                        <h3>Edit User</h3>
+                    </div>
+                    <div class="">
+                        <h4 class="text-danger">Date Created: {{ $user->created_at->timezone('Asia/Manila')->format('F j, Y, g:i a') }}</h4>
+                    </div>
+                </div>
+                    <hr>
                     <form class="form" method="post" action="{{route('admin.updateUserPost', ['user' => $user])}}">
                         @csrf
                         @method('put')
-
-                <h3>Edit User</h3>
-                <hr>
-                <br>
-                <div class="row">
+                    <div class="row">
                     <div class="form-group col-md-12">
                         <label for="">User Status</label>
                         <select class="form-select" name="status" aria-label="Default select example">
@@ -74,6 +77,11 @@
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                           </select>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label for="">Department</label>
+                    <input type="text" name="department" class="form-control"  placeholder="&#xf1ad;  Department..." value="{{$user->department}}"  >
                     </div>
 
                     <div class="form-group col-md-4">
@@ -95,6 +103,13 @@
                         <label for="">Email</label>
                     <input type="email" name="email" class="form-control" value="{{$user->email}}" id="exampleInputEmail1" aria-describedby="emailHelp"   placeholder="&#xf0e0;  Email..." required>
                     </div>
+
+
+                    <div class="form-group col-md-12">
+                        <label for="">Usernamaae</label>
+                    <input type="text" name="username" class="form-control" value="{{$user->username}}"  placeholder="&#xf0e0;  Username..." >
+                    </div>
+
                     <div class="form-group col-md-6">
                         <label for="">New Password</label>
                         <input type="text" name="password" class="form-control"  id="exampleInputPassword1" placeholder="&#xf023; Password..." >

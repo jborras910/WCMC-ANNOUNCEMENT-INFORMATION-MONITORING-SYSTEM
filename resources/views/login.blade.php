@@ -60,16 +60,41 @@
     }
     }
     body{
-        background-color: #f8f9fa !important;
+        background-color: rgb(211, 235, 254) !important;
+        background-image: url(assets/login-bg-removebg-preview.png);
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
+
+	    /* animation: change-color-anim 20s linear infinite; */
     }
+
+
+    /* @keyframes change-color-anim {
+        0%,100%{
+            background-color: rgb(211, 235, 254);
+        }
+        50%{
+            background-color: #6710f286;
+        }
+
+    } */
     .form{
-        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
         padding: 30px;
-        width: 35%;
-        margin: 10% auto !important;
+        width: 30%;
+        top: 100 !important;
+        left: 220 !important;
         border-radius: 10px !important;
         border-top: 3px solid #4285f4 !important;
         background-color: #fff !important;
+        position: absolute !important;
+        cursor: pointer;
+    }
+    .form:hover{
+        transition: 0.5s;
+        box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 0.435);
+        transform: translateY(-10px);
     }
     .form-group {
         position: relative;
@@ -90,11 +115,11 @@
     }
 
     .header{
-        text-align: center;
+        text-align: left;
     }
     .logo{
         width: 200px !important;
-        margin-bottom: 25px !important;
+        margin-bottom: 15px !important;
     }
     .form .btn{
 
@@ -123,26 +148,37 @@
 	        animation: shake-horizontal 0.8s cubic-bezier(0.455, 0.030, 0.515, 0.955) both;
     }
 
-
+    @media screen and (max-width: 1000px) {
+        .form{
+            width: 100% !important;
+            position: static !important;
+            margin-top: 20% !important;
+        }
+    }
 
 
 </style>
 
-
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 @section('content')
 <div class="container-fluid">
    <div class="container">
     <form class="form" method="post" action="{{ route('login.post') }}">
         @csrf
-        <div class="header">
+        <div class="header" style="color: rgb(49, 115, 153);">
             <img class="logo" src="assets/wcmc_logo_1.png" alt="">
+            <br>
+            <h4 >Login to Your Account</h4>
+            <p style="font-size: 12px;" >Announcement Information Monitoring Management System</p>
+
+
         </div>
-        @if(Session::has('status') || $errors->has('email') || $errors->has('password'))
+        @if(Session::has('status') || $errors->has('username') || $errors->has('password'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 @if(session('status'))
                     {{ session('status') }}
                 @endif
-                @error('email')
+                @error('username')
                     {{ $message }}
                 @enderror
 
@@ -155,8 +191,8 @@
             </div>
         @endif
         <div class="form-group">
-            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="&#xf0e0;  Email..." value="{{ old('email') }}">
-            @error('email')
+            <input type="text" name="username" class="form-control @error('username') is-invalid @enderror" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="&#xf0e0;  Email..." value="{{ old('username') }}">
+            @error('username')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -176,8 +212,11 @@
             <input type="checkbox" class="form-check-input" id="rememberMeCheckbox">
             <label class="form-check-label" for="rememberMeCheckbox">Remember me</label>
         </div> --}}
-        <br>
+
         <button type="submit" class="btn btn-primary">Sign In</button>
+
+
+
       </form>
 
    </div>

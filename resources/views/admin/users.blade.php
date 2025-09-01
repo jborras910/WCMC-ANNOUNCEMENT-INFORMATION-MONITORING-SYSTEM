@@ -5,6 +5,8 @@
 @section('content')
 
 
+
+
 <style>
     .page-header{
         box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
@@ -56,11 +58,11 @@
                 </div>
                 <div class="table-responsive pt-3">
                     <table class="table bg-light table-bordered table-striped" id="dataTable" >
-                        <thead>
+                        <thead class="thead-dark" style="text-transform: uppercase;">
                             <tr>
                                 <th>#</th>
                                 <th>Name</th>
-                                <th>Email</th>
+                                <th>Username</th>
                                 <th class="text-center">Status</th>
                                 {{-- <th>User Status</th>
                                 <th>Role</th> --}}
@@ -73,7 +75,7 @@
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td style="text-transform: capitalize;">{{$user->first_name." ".$user->middle_name." ".$user->last_name}}</td>
-                                <td>{{$user->email}}</td>
+                                <td>{{$user->username}}</td>
 
                                 <td class="text-center text-light"><p style="width: 55%; margin: 0px auto; padding:6px;" class="@if($user->status === 'Active') bg-success-on @else bg-danger-on @endif">{{$user->status}}</p></td>
 

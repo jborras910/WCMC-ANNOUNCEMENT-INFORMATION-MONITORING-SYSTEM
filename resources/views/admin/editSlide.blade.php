@@ -93,7 +93,7 @@
             </div>
             <div class="form-group">
                 <label for="">Upload the new video file here</label>
-                <input name="new_file_name" required class="form-control" type="file" id="formFile" accept="video/*" onchange="previewVideo(event)" >
+                <input name="new_file_name" required class="form-control" type="file" id="formFile" accept="video/*" onchange="previewVideo(event)">
                 <input type="hidden" name="current_file" value="{{$slide->file}}">
             </div>
 
@@ -104,16 +104,29 @@
         <script>
             function previewVideo(event) {
                 var video = document.getElementById('videoPreview');
+                var file = event.target.files[0];
+
+                // Check if file size exceeds 40MB (40 * 1024 * 1024 bytes)
+                if (file.size > 100 * 1024 * 1024) {
+
+                Swal.fire({
+                title: "Invalid!",
+                text: "File size exceeds 40MB limit.",
+                icon: "error",
+            });
+                    event.target.value = ''; // Clear the input file selection
+                    return;
+                }
+
                 video.innerHTML = ''; // Clear any existing source elements
 
                 var source = document.createElement('source');
-                source.setAttribute('src', URL.createObjectURL(event.target.files[0]));
+                source.setAttribute('src', URL.createObjectURL(file));
                 source.setAttribute('type', 'video/mp4');
                 video.appendChild(source);
                 video.load(); // Load the new source
             }
         </script>
-
 
 
 

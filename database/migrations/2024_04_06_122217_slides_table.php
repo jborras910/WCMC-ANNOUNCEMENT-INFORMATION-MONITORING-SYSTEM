@@ -18,9 +18,10 @@ class SlidesTable extends Migration
 
         Schema::create('slides_table', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('title')->default('')->change();
-            $table->string('description')->default('')->change();
+            $table->string('title')->default('');
+            $table->string('description')->default('');
             $table->string('file');
+            $table->string('status')->default('pending'); // Add the status column
             $table->timestamps();
         });
 

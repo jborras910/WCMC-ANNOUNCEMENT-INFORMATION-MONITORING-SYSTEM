@@ -1,5 +1,5 @@
 @extends('admin.index')
-@section('title', 'Edit Slide')
+@section('title', 'Add Users')
 
 
 <style>
@@ -77,6 +77,14 @@
         <hr>
         <br>
         <div class="row">
+
+            <div class="form-group col-md-12">
+                <label for="">Department</label>
+            <input type="text" name="department" class="form-control"  placeholder="&#xf1ad;  Department..." value="{{ old('deparment') }}" >
+            </div>
+
+
+
             <div class="form-group col-md-4">
                 <label for="">First Name</label>
                 <input type="text" name="first_name" class="form-control" aria-describedby="emailHelp"   placeholder="&#xf007;  First Name..." value="{{ old('first_name') }}" required>
@@ -96,14 +104,19 @@
                 <label for="">Email</label>
             <input type="email" name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"   placeholder="&#xf0e0;  Email..." value="{{ old('email') }}" required>
             </div>
+
+
+            <div class="form-group col-md-6">
+                <label for="">Username</label>
+                <input type="text" name="username" class="form-control"  placeholder="&#xf4fc;  Username..." value="{{ old('username') }}" required>
+            </div>
+
+
             <div class="form-group col-md-6">
                 <label for="">Password</label>
                 <input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="&#xf023; Password..." value="{{ old('password') }}" required>
             </div>
-            {{-- <div class="form-group col-md-6">
-                <label for="">Confirm Password</label>
-                <input type="password" name="confirm_password" class="form-control" id="exampleInputPassword1" placeholder="&#xf023; Password...">
-            </div> --}}
+
         </div>
             <br>
             <button type="submit" class="btn btn-primary text-light ">Register User</button>

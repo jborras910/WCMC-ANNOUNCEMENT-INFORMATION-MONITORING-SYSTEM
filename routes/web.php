@@ -14,40 +14,64 @@ use App\Http\Controllers\Controller;
 */
 
 
+route::get('test/page', function (){
+    dd(phpinfo());
+});
+
 //user and guest
 Route::get('/', [Controller::class, 'welcome'])->name('welcome');
+
+
+Route::get('/TableData', [Controller::class, 'dataTable'])->name('dataTable');
+
+
 
 Route::get('/login', [Controller::class, 'login'])->name('login');
 Route::get('/register', [Controller::class, 'register'])->name('register');
 Route::post('/login', [Controller::class, 'loginPost'])->name('login.post');
 Route::post('/registration', [Controller::class, 'registrationPost'])->name('registration.post');
 
+Route::group(['middleware' => 'auth'], function(){
+    Route::get('/logout', [Controller::class, 'logout'])->name('logout');
+    Route::get('/dashboard', [Controller::class, 'dashboard'])->name('admin.dashboard');
+    //user crud
+    Route::get('/users', [Controller::class, 'users'])->name('admin.users');
+    Route::get('/addUser', [Controller::class, 'addUser'])->name('admin.addUser');
+    Route::post('/addUser', [Controller::class, 'addUserPost'])->name('admin.addUserPost');
+    Route::delete('/deleteUser/{user}/destroy', [Controller::class, 'destroyUser'])->name('deleteUser.destroy');
+    Route::get('/editUser/{user}/edit', [Controller::class, 'editUser'])->name('user.edit');
+    Route::put('/updateUser/{user}/updateUser', [Controller::class, 'updateUser'])->name('admin.updateUserPost');
+    //activity logs
+    Route::get('/activity', [Controller::class, 'activity'])->name('admin.activity');
+    Route::get('/viewInterface', [Controller::class, 'viewInterface'])->name('admin.viewInterface');
+    //slide crud
+    Route::get('/addSlide', [Controller::class, 'addSlide'])->name('admin.addSlide');
+    Route::post('/addVideoslide', [Controller::class, 'addVideoslide'])->name('addVideoslide.post');
+    Route::get('/slide/{slide}/edit', [Controller::class, 'editSlide'])->name('slide.edit');
+    Route::put('/slide/{slide}/updateVideo', [Controller::class, 'updateVideo'])->name('slide.updateVideo');
+    Route::delete('/deleteSlide/{slide}/destroy', [Controller::class, 'destroy'])->name('deleteSlide.destroy');
+    Route::get('/filter', [Controller::class, 'filter'])->name('filter');
+
+    Route::put('/pending/{slide}/publishFile', [Controller::class, 'publishFile'])->name('slide.publishFile');
+
+    Route::put('/pending/{slide}/reject', [Controller::class, 'rejectFile'])->name('slide.reject');
+
+
+    Route::get('/pending', [Controller::class, 'pendingSlides'])->name('pendingSlides');
 
 
 
-Route::get('/logout', [Controller::class, 'logout'])->name('logout');
-Route::get('/dashboard', [Controller::class, 'dashboard'])->name('admin.dashboard');
 
 
-//user crud
-Route::get('/users', [Controller::class, 'users'])->name('admin.users');
-Route::get('/addUser', [Controller::class, 'addUser'])->name('admin.addUser');
-Route::post('/addUser', [Controller::class, 'addUserPost'])->name('admin.addUserPost');
-Route::delete('/deleteUser/{user}/destroy', [Controller::class, 'destroyUser'])->name('deleteUser.destroy');
-Route::get('/editUser/{user}/edit', [Controller::class, 'editUser'])->name('user.edit');
-Route::put('/updateUser/{user}/updateUser', [Controller::class, 'updateUser'])->name('admin.updateUserPost');
+
+});
+
+Route::fallback(function () {
 
 
-//activity logs
-Route::get('/activity', [Controller::class, 'activity'])->name('admin.activity');
-Route::get('/viewInterface', [Controller::class, 'viewInterface'])->name('admin.viewInterface');
+    return view('error');
+});
 
-//slide crud
-Route::get('/addSlide', [Controller::class, 'addSlide'])->name('admin.addSlide');
-Route::post('/addVideoslide', [Controller::class, 'addVideoslide'])->name('addVideoslide.post');
-Route::get('/slide/{slide}/edit', [Controller::class, 'editSlide'])->name('slide.edit');
-Route::put('/slide/{slide}/updateVideo', [Controller::class, 'updateVideo'])->name('slide.updateVideo');
-Route::delete('/deleteSlide/{slide}/destroy', [Controller::class, 'destroy'])->name('deleteSlide.destroy');
 
 
 
