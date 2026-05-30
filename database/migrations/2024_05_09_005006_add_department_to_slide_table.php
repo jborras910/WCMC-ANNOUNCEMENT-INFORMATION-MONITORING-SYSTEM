@@ -6,28 +6,19 @@ use Illuminate\Database\Migrations\Migration;
 
 class AddDepartmentToSlideTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::table('slides_table', function (Blueprint $table) {
-            $table->string('added_by_email')->nullable()->after('status');
-            $table->string('department')->nullable()->after('added_by_email');
+            if (!Schema::hasColumn('slides_table', 'added_by_email')) $table->string('added_by_email')->nullable()->after('status');
+            if (!Schema::hasColumn('slides_table', 'department'))      $table->string('department')->nullable()->after('added_by_email');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('slides_table', function (Blueprint $table) {
-            $table->dropColumn(['added_by_email', 'department']);
+            $cols = array_filter(['added_by_email', 'department'], fn($c) => Schema::hasColumn('slides_table', $c));
+            if ($cols) $table->dropColumn(array_values($cols));
         });
     }
 }

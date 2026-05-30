@@ -8,15 +8,19 @@ class AddEmailToActivityLogsTable extends Migration
 {
     public function up()
     {
-        Schema::table('activity_logs', function (Blueprint $table) {
-            $table->string('email')->nullable()->after('name');
-        });
+        if (!Schema::hasColumn('activity_logs', 'email')) {
+            Schema::table('activity_logs', function (Blueprint $table) {
+                $table->string('email')->nullable()->after('name');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('activity_logs', function (Blueprint $table) {
-            $table->dropColumn('email');
-        });
+        if (Schema::hasColumn('activity_logs', 'email')) {
+            Schema::table('activity_logs', function (Blueprint $table) {
+                $table->dropColumn('email');
+            });
+        }
     }
 }
