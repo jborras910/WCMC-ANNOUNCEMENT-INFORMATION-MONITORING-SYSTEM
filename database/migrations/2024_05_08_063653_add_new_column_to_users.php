@@ -14,7 +14,8 @@ class AddNewColumnToUsers extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('department')->nullable()->after('role'); // Corrected column name
+            $table->string('role')->nullable()->after('middle_name');
+            $table->string('department')->nullable()->after('role');
             $table->string('username')->nullable()->after('email');
         });
     }
@@ -27,8 +28,7 @@ class AddNewColumnToUsers extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('department'); // Corrected column name
-            $table->dropColumn('username');
+            $table->dropColumn(['role', 'department', 'username']);
         });
     }
 }

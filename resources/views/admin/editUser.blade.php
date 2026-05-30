@@ -1,148 +1,99 @@
 @extends('admin.index')
-@section('title', 'Home Page')
-
+@section('title', 'Edit User')
 
 @section('content')
 
-
-<style>
-    .page-header{
-        box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
-        padding: 20px 10px !important;
-        background-color: #fff !important;
-        border-radius: 5px !important;
-    }
-
-    .form-group input, .form-group textarea, .form-group .form-select{
-        box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
-        outline: 0px !important;
-        font-family: Arial, FontAwesome;
-
-        background-color: rgb(243, 243, 243) !important;
-
-        border: 2px solid rgb(243, 243, 243) !important;
-    }
-    .form-group label {
-        margin-bottom: 4px !important;
-        font-weight: 500;
-
-
-    }
-</style>
-
-
-
-
-
-
-<div class="row">
-    @if(session('success'))
-    <script>
-        Swal.fire({
-        title: "Success!",
-        text: "{{ session('success') }}",
-        icon: "success",
-    });
+@if(session('success'))
+<script>
+  const Toast = Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000 });
+  Toast.fire({ icon:'success', title:"{{ session('success') }}" });
 </script>
 @elseif(session('error'))
-    <script>
-        Swal.fire({
-            title: "Error!",
-            text: "{{ session('error') }}",
-            icon: "error",
-        });
-    </script>
+<script>Swal.fire({ title:'Error!', text:"{{ session('error') }}", icon:'error' });</script>
 @endif
-    <div class="col-md-12 grid-margin">
-        {{-- <h3 class="page-header"><i class="fa-solid fa-user mr-2"></i>Users Table</h3> --}}
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div class="">
-                        <h3>Edit User</h3>
-                    </div>
-                    <div class="">
-                        <h4 class="text-danger">Date Created: {{ $user->created_at->timezone('Asia/Manila')->format('F j, Y, g:i a') }}</h4>
-                    </div>
-                </div>
-                    <hr>
-                    <form class="form" method="post" action="{{route('admin.updateUserPost', ['user' => $user])}}">
-                        @csrf
-                        @method('put')
-                    <div class="row">
-                    <div class="form-group col-md-12">
-                        <label for="">User Status</label>
-                        <select class="form-select" name="status" aria-label="Default select example">
-                            <option value="{{$user->status}}"  selected>{{$user->status}}</option>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                          </select>
-                    </div>
 
-                    <div class="form-group col-md-12">
-                        <label for="">Department</label>
-                    <input type="text" name="department" class="form-control"  placeholder="&#xf1ad;  Department..." value="{{$user->department}}"  >
-                    </div>
-
-                    <div class="form-group col-md-4">
-                        <label for="">First Name</label>
-                        <input type="text" name="first_name" value="{{$user->first_name}}" class="form-control" aria-describedby="emailHelp"   placeholder="&#xf007;  First Name..." required>
-                    </div>
-
-                    <div class="form-group col-md-4">
-                        <label for="">Last Name</label>
-                        <input type="text" name="last_name" value="{{$user->last_name}}" class="form-control" aria-describedby="emailHelp"   placeholder="&#xf007;  Last Name..." required>
-                    </div>
-
-                    <div class="form-group col-md-4">
-                        <label for="">Middle Name</label>
-                        <input type="text" name="middle_name" value="{{$user->middle_name}}" class="form-control" aria-describedby="emailHelp"   placeholder="&#xf007;  Middle Name...">
-                    </div>
-
-                    <div class="form-group col-md-12">
-                        <label for="">Email</label>
-                    <input type="email" name="email" class="form-control" value="{{$user->email}}" id="exampleInputEmail1" aria-describedby="emailHelp"   placeholder="&#xf0e0;  Email..." required>
-                    </div>
-
-
-                    <div class="form-group col-md-12">
-                        <label for="">Usernamaae</label>
-                    <input type="text" name="username" class="form-control" value="{{$user->username}}"  placeholder="&#xf0e0;  Username..." >
-                    </div>
-
-                    <div class="form-group col-md-6">
-                        <label for="">New Password</label>
-                        <input type="text" name="password" class="form-control"  id="exampleInputPassword1" placeholder="&#xf023; Password..." >
-                    </div>
-
-
-
-                </div>
-                    <br>
-                    <button type="submit" class="btn btn-primary text-light ">Saved</button>
-                    <a type="submit" href="{{route('admin.users')}}" class="btn btn-secondary text-light ">Cancel</a>
-                  </form>
-            </div>
-        </div>
+<div class="page-card">
+  <div class="page-card-header">
+    <h5><i class="mdi mdi-account-edit mr-2 text-primary"></i>Edit User</h5>
+    <div class="d-flex align-items-center">
+      <span class="text-muted small mr-3">
+        <i class="mdi mdi-calendar-outline mr-1"></i>
+        Created {{ $user->created_at->timezone('Asia/Manila')->format('M j, Y') }}
+      </span>
+      <a href="{{ route('admin.users') }}" class="btn btn-secondary btn-sm">
+        <i class="mdi mdi-arrow-left mr-1"></i>Back
+      </a>
     </div>
+  </div>
+
+  <div class="page-card-body">
+    <form method="post" action="{{ route('admin.updateUserPost', ['user' => $user]) }}">
+      @csrf @method('put')
+
+      <div class="form-section-title">Account Status &amp; Access</div>
+      <div class="row">
+        <div class="form-group col-md-4">
+          <label>Status</label>
+          <select name="status" class="form-control">
+            <option value="Active"   {{ $user->status === 'Active'   ? 'selected' : '' }}>Active</option>
+            <option value="Inactive" {{ $user->status === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+          </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label>Department</label>
+          <input type="text" name="department" class="form-control" placeholder="e.g. IT, HR" value="{{ $user->department }}">
+        </div>
+        <div class="form-group col-md-4">
+          <label>Role</label>
+          <select name="role" class="form-control">
+            <option value="faculty"      {{ $user->role === 'faculty'      ? 'selected' : '' }}>Faculty</option>
+            <option value="master_admin" {{ $user->role === 'master_admin' ? 'selected' : '' }}>Master Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-title mt-3">Personal Information</div>
+      <div class="row">
+        <div class="form-group col-md-4">
+          <label>First Name <span class="text-danger">*</span></label>
+          <input type="text" name="first_name" class="form-control" value="{{ $user->first_name }}" required>
+        </div>
+        <div class="form-group col-md-4">
+          <label>Last Name <span class="text-danger">*</span></label>
+          <input type="text" name="last_name" class="form-control" value="{{ $user->last_name }}" required>
+        </div>
+        <div class="form-group col-md-4">
+          <label>Middle Name</label>
+          <input type="text" name="middle_name" class="form-control" value="{{ $user->middle_name }}">
+        </div>
+        <div class="form-group col-md-6">
+          <label>Email Address <span class="text-danger">*</span></label>
+          <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
+        </div>
+        <div class="form-group col-md-6">
+          <label>Username</label>
+          <input type="text" name="username" class="form-control" value="{{ $user->username }}">
+        </div>
+      </div>
+
+      <div class="form-section-title mt-3">Change Password</div>
+      <div class="row">
+        <div class="form-group col-md-6">
+          <label>New Password <span class="text-muted" style="text-transform:none;font-weight:400;">(leave blank to keep current)</span></label>
+          <input type="password" name="password" class="form-control" placeholder="••••••••">
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary">
+          <i class="mdi mdi-content-save"></i> Save Changes
+        </button>
+        <a href="{{ route('admin.users') }}" class="btn btn-secondary">
+          <i class="mdi mdi-close"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-
-{{-- jQuery --}}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
-
-
-
-
-<script>
-    $(document).ready(function() {
-        $('#dataTable').DataTable();
-    });
-</script>
-
 
 @endsection

@@ -14,7 +14,7 @@ class AddDepartmentToSlideTable extends Migration
     public function up()
     {
         Schema::table('slides_table', function (Blueprint $table) {
-            //
+            $table->string('added_by_email')->nullable()->after('status');
             $table->string('department')->nullable()->after('added_by_email');
         });
     }
@@ -27,8 +27,7 @@ class AddDepartmentToSlideTable extends Migration
     public function down()
     {
         Schema::table('slides_table', function (Blueprint $table) {
-            //
-            $table->dropColumn('department');
+            $table->dropColumn(['added_by_email', 'department']);
         });
     }
 }

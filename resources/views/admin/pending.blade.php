@@ -1,209 +1,259 @@
 @extends('admin.index')
-@section('title', 'Pending slides')
-
+@section('title', 'Pending Slides')
 
 @section('content')
 
-
-
-
 <style>
-    .page-header{
-        box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
-        padding: 20px 10px !important;
-        background-color: #fff !important;
-        border-radius: 5px !important;
-    }
-    .bg-success-on{
-        background-color: rgb(77, 238, 77) !important;
-
-    }
-    .bg-danger-on{
-        background-color: rgba(240, 24, 24, 0.406) !important;
-     }
+  .thumb-wrap {
+    width: 88px; height: 58px;
+    border-radius: 6px; overflow: hidden;
+    position: relative; flex-shrink: 0;
+    cursor: pointer; background: #0f0f1a;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: box-shadow 0.18s ease;
+  }
+  .thumb-wrap:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
+  .thumb-wrap video { width:100%;height:100%;object-fit:cover;display:block;pointer-events:none; }
+  .thumb-overlay {
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.28);transition:background 0.18s ease;
+  }
+  .thumb-wrap:hover .thumb-overlay { background:rgba(0,0,0,0.48); }
+  .play-icon { font-size:24px;color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6));transition:transform 0.18s ease; }
+  .thumb-wrap:hover .play-icon { transform:scale(1.18); }
+  .file-name { font-size:13px;font-weight:600;color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.3; }
+  .file-meta { font-size:11px;color:#a0aec0;margin-top:2px; }
+  #dataTable td { vertical-align:middle !important;padding:10px 12px !important; }
+  #dataTable th { padding:10px 12px !important;font-size:12px;letter-spacing:0.05em; }
 </style>
 
-
-
-<div class="row">
-    @if(session('success'))
-    <script>
-        Swal.fire({
-        title: "Success!",
-        text: "{{ session('success') }}",
-        icon: "success",
-    });
+@if(session('success'))
+<script>
+  const Toast = Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000, timerProgressBar:true });
+  Toast.fire({ icon:'success', title:"{{ session('success') }}" });
 </script>
 @elseif(session('error'))
-    <script>
-        Swal.fire({
-            title: "Error!",
-            text: "{{ session('error') }}",
-            icon: "error",
-        });
-    </script>
+<script>
+  Swal.fire({ title:'Error!', text:"{{ session('error') }}", icon:'error' });
+</script>
 @endif
-    <div class="col-md-12 grid-margin">
-        {{-- <h3 class="page-header"><i class="fa-solid fa-user mr-2"></i>Users Table</h3> --}}
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between flex-wrap">
-                    <div class="d-flex align-items-end flex-wrap">
-                        <h2>Pending slides Table</h2>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-end flex-wrap">
 
+<div class="card shadow-sm" style="border:none;border-radius:8px;overflow:hidden;">
+  <div class="d-flex justify-content-between align-items-center px-4 py-3"
+    style="background:linear-gradient(135deg,#7b4f00 0%,#f6a623 100%);border-radius:8px 8px 0 0;">
+    <h5 class="mb-0 font-weight-bold text-white">
+      <i class="mdi mdi-clock-outline mr-2"></i>Pending Slides
+    </h5>
+    <span class="badge badge-light" style="font-size:13px;padding:6px 14px;">
+      {{ $slides->count() }} pending
+    </span>
+  </div>
 
-                    </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 bg-white" id="dataTable">
+        <thead style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+          <tr>
+            <th style="width:44px" class="text-center">#</th>
+            <th style="width:110px">Preview</th>
+            <th>Title</th>
+            <th>Department</th>
+            <th class="text-center" style="width:110px">Status</th>
+            <th class="text-center" style="width:180px">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($slides as $index => $slide)
+          <tr>
+            <td class="text-center text-muted">{{ $index + 1 }}</td>
+
+            <td>
+              <div class="thumb-wrap"
+                data-video-src="{{ asset('image_upload/' . $slide->file) }}"
+                data-video-title="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}">
+                <video preload="metadata" muted>
+                  <source src="{{ asset('image_upload/' . $slide->file) }}#t=0.5" type="video/mp4">
+                </video>
+                <div class="thumb-overlay">
+                  <i class="mdi mdi-play-circle play-icon"></i>
                 </div>
-                <div class="table-responsive pt-3">
-                    <table class="table bg-light table-bordered table-striped" id="dataTable" >
-                        <thead class="thead-dark" style="text-transform: capitalize;">
-                            <tr>
-                                <th>#</th>
-                                <th>File</th>
-                                <th>Department</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($slides as $index => $slide)
-                         <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>
-                                {{-- <iframe  src="{{ 'image_upload/'.$slide->file }}" width="300" height="200" allow="autoplay; muted; controls"></iframe> --}}
+              </div>
+            </td>
 
-                                <video width="300" height="200" control autoplay muted>
-                                    <source src="{{'image_upload/'.$slide->file}}" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            </td>
-                            <td>{{$slide->department}}</td>
-                            <td class="text-uppercase text-center" style="color: {{ $slide->status === 'pending' ? 'red' : 'green' }}">
-                                {{ $slide->status }}
-                            </td>
-                            <td class="text-center">
-                                <Button class="btn btn-success text-light" data-toggle="modal" data-target="#exampleModalCenter{{$slide->id}}">Approved</Button>
+            <td>
+              <div class="file-name" title="{{ $slide->file }}">
+                {{ pathinfo($slide->file, PATHINFO_FILENAME) }}
+              </div>
+              <div class="file-meta">
+                <span class="text-uppercase">.{{ pathinfo($slide->file, PATHINFO_EXTENSION) }}</span>
+              </div>
+            </td>
 
-                                <button type="button" class="btn btn-dark text-light" data-toggle="modal" data-target="#exampleModalCenter_2{{$slide->id}}">Reject</button>
-                                <!-- Modal -->
-                                <form method="post" action="{{route('slide.reject', ['slide'=> $slide])}}">
-                                    @csrf
-                                    @method('put')
-                                    <div class="modal fade" id="exampleModalCenter_2{{$slide->id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalLongTitle">Are you sure you want to reject this slide?</h5>
+            <td>{{ $slide->department ?? '—' }}</td>
 
+            <td class="text-center">
+              <span class="badge-pill-status s-pending">Pending</span>
+            </td>
 
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    {{-- Determine the file type --}}
-                                                    @php
-                                                        $extension = pathinfo($slide->file, PATHINFO_EXTENSION);
-                                                    @endphp
-                                                        @if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png' || $extension == 'gif')
-                                                            {{-- Display the image --}}
-                                                            <img style="width:100%; height: 400px; border-radius: 0px;" src="{{'image_upload/'.$slide->file}}" alt="">
-                                                        @elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov' || $extension == 'wmv')
-                                                            {{-- Display the video --}}
-                                                            <video style="width:100%" controls>
-                                                                <source src="{{'image_upload/'.$slide->file}}" type="video/mp4">
-                                                                Your browser does not support the video tag.
-                                                            </video>
-
-                                                            <input type="hidden" name="user_add_name" value="{{Auth()->user()->first_name." ".Auth()->user()->last_name}}">
-                                                            <input type="hidden" name="user_add_email" value="{{Auth()->user()->email}}">
-                                                            <input type="hidden" name="user_add_activity" value="{{Auth()->user()->first_name." ".Auth()->user()->last_name." rejected Slide"}}">
-                                                        @else
-                                                            {{-- Display a link to download the document --}}
-                                                            <iframe style="width:100%" class="pdf" src="{{'image_upload/'.$slide->file}}" width="400" height="400"></iframe>
-                                                            {{-- <a href="{{'image_upload/'.$slide->file}}" download>{{$slide->file}}</a> --}}
-                                                        @endif
-
-                                                </div>
-                                                <div class="modal-footer text-light">
-                                                    <button type="submit" class="btn btn-danger text-light" >Reject</button>
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-
-                                <form method="post" action="{{ route('slide.publishFile', ['slide' => $slide]) }}">
-                                    @csrf
-                                    @method('put') <!-- Use 'put' method -->
-                                    <div class="modal fade" id="exampleModalCenter{{$slide->id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalLongTitle">Are you sure you want to Post this file?</h5>
-
-
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <video style="width:100%" controls>
-                                                        <source src="{{'image_upload/'.$slide->file}}" type="video/mp4">
-                                                        Your browser does not support the video tag.
-                                                    </video>
-
-
-                                                    <input type="hidden" name="user_add_name" value="{{Auth()->user()->first_name." ".Auth()->user()->last_name}}">
-                                                    <input type="hidden" name="user_add_email" value="{{Auth()->user()->email}}">
-                                                    <input type="hidden" name="user_add_activity" value="{{Auth()->user()->first_name." ".Auth()->user()->last_name." Publish the slide"}}">
-
-
-
-
-
-
-
-                                                </div>
-                                                <div class="modal-footer text-light text-center">
-                                                    <button type="submit" class="btn btn-success text-light" >Publish</button>
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                       </td>
-                         </tr>
-                            @endforeach
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            <td class="text-center" style="white-space:nowrap;">
+              <button type="button" class="btn btn-sm btn-success text-white mr-1 btn-approve"
+                data-approve-url="{{ route('slide.publishFile', ['slide' => $slide]) }}"
+                data-slide-name="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}"
+                data-department="{{ $slide->department ?? '—' }}">
+                <i class="mdi mdi-check mr-1"></i>Approve
+              </button>
+              <button type="button" class="btn btn-sm btn-danger text-white btn-reject"
+                data-reject-url="{{ route('slide.reject', ['slide' => $slide]) }}"
+                data-slide-name="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}"
+                data-department="{{ $slide->department ?? '—' }}">
+                <i class="mdi mdi-close mr-1"></i>Reject
+              </button>
+            </td>
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
     </div>
+  </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+{{-- ── Shared Preview Modal (outside table) ── --}}
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;">
+      <div class="modal-header" style="background:#1e293b;padding:14px 20px;border:none;">
+        <div class="d-flex align-items-center" style="min-width:0;">
+          <i class="mdi mdi-filmstrip mr-2" style="color:#60a5fa;font-size:18px;flex-shrink:0;"></i>
+          <span id="previewModalTitle" style="color:#f1f5f9;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px;"></span>
+        </div>
+        <button id="closePreviewModal" type="button"
+          style="background:rgba(255,255,255,0.10);border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#94a3b8;font-size:18px;flex-shrink:0;margin-left:12px;transition:background 0.18s,color 0.18s;"
+          onmouseover="this.style.background='rgba(255,255,255,0.22)';this.style.color='#fff'"
+          onmouseout="this.style.background='rgba(255,255,255,0.10)';this.style.color='#94a3b8'">
+          <i class="mdi mdi-close"></i>
+        </button>
+      </div>
+      <div class="modal-body p-0" style="background:#000;">
+        <video id="previewVideo" style="width:100%;display:block;max-height:70vh;" controls>
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+</div>
 
-{{-- jQuery --}}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+{{-- ── Shared Approve Modal (outside table) ── --}}
+<form method="post" id="approveForm" action="">
+  @csrf @method('put')
+  <input type="hidden" name="user_add_name" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
+  <input type="hidden" name="user_add_email" value="{{ Auth()->user()->email }}">
+  <input type="hidden" name="user_add_activity" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }} published a slide">
+  <div class="modal fade" id="approveModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title text-success">
+            <i class="mdi mdi-check-circle mr-1"></i>Approve Slide
+          </h6>
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          Publish <strong id="approveFileName"></strong>?
+          <p class="small text-muted mt-1 mb-0">Department: <span id="approveDept"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success btn-sm text-white">
+            <i class="mdi mdi-check mr-1"></i>Publish
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
 
+{{-- ── Shared Reject Modal (outside table) ── --}}
+<form method="post" id="rejectForm" action="">
+  @csrf @method('put')
+  <input type="hidden" name="user_add_name" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
+  <input type="hidden" name="user_add_email" value="{{ Auth()->user()->email }}">
+  <input type="hidden" name="user_add_activity" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }} rejected a slide">
+  <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title text-danger">
+            <i class="mdi mdi-close-circle mr-1"></i>Reject Slide
+          </h6>
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          Reject <strong id="rejectFileName"></strong>?
+          <p class="small text-muted mt-1 mb-0">Department: <span id="rejectDept"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger btn-sm text-white">
+            <i class="mdi mdi-close mr-1"></i>Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
 
+@endsection
 
-
-
+@section('scripts')
 <script>
-    $(document).ready(function() {
-        $('#dataTable').DataTable();
-    });
+$(document).ready(function () {
+  $('#dataTable').DataTable({ responsive: true });
+});
+
+// ── Preview ──
+$(document).on('click', '.thumb-wrap', function () {
+  var src   = $(this).data('video-src');
+  var title = $(this).data('video-title');
+  $('#previewModalTitle').text(title);
+  var video = document.getElementById('previewVideo');
+  video.src = src;
+  video.load();
+  $('#previewModal').modal('show');
+});
+
+$('#previewModal').on('shown.bs.modal', function () {
+  var video = document.getElementById('previewVideo');
+  var p = video.play();
+  if (p !== undefined) { p.catch(function () {}); }
+});
+
+$('#previewModal').on('hidden.bs.modal', function () {
+  var video = document.getElementById('previewVideo');
+  video.pause();
+  video.removeAttribute('src');
+  video.load();
+});
+
+// ── Approve ──
+$(document).on('click', '.btn-approve', function () {
+  var url  = $(this).data('approve-url');
+  var name = $(this).data('slide-name');
+  var dept = $(this).data('department');
+  $('#approveForm').attr('action', url);
+  $('#approveFileName').text(name);
+  $('#approveDept').text(dept);
+  $('#approveModal').modal('show');
+});
+
+// ── Reject ──
+$(document).on('click', '.btn-reject', function () {
+  var url  = $(this).data('reject-url');
+  var name = $(this).data('slide-name');
+  var dept = $(this).data('department');
+  $('#rejectForm').attr('action', url);
+  $('#rejectFileName').text(name);
+  $('#rejectDept').text(dept);
+  $('#rejectModal').modal('show');
+});
 </script>
-
-
 @endsection

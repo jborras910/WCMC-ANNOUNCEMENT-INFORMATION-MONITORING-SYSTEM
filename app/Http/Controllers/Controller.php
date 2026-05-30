@@ -54,6 +54,14 @@ class Controller extends BaseController
 
 
 
+    private function logActivity(string $action): void
+    {
+        Activity_logs::create([
+            'name'     => Auth::user()->first_name . ' ' . Auth::user()->last_name,
+            'email'    => Auth::user()->email,
+            'activity' => Auth::user()->first_name . ' ' . Auth::user()->last_name . ' ' . $action,
+        ]);
+    }
     public function welcome(){
 
         $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->get();
@@ -201,16 +209,12 @@ class Controller extends BaseController
 
 
     public function users(){
-        if(Auth::user()->role === 'master admin'){
-            $users = User::all();
-
-            // where('role', 'user')->get();
-
-            $this->data['users'] = $users;
-            return view('admin.users', $this->data);
-        } else {
+        if(Auth::user()->role !== 'master_admin'){
             return redirect()->route('admin.dashboard');
         }
+        $users = User::all();
+        $this->data['users'] = $users;
+        return view('admin.users', $this->data);
     }
 
 
@@ -287,13 +291,7 @@ class Controller extends BaseController
         if(!$slide_insert){
             return redirect(route('admin.dashboard'))->with('error', 'Slide added failed');
         }else{
-
-            $user_data['name'] = $request->user_add_name;
-            $user_data['email'] = $request->user_add_email;
-            $user_data['activity'] = $request->user_add_activity;
-
-            Activity_logs::create($user_data);
-
+            $this->logActivity('Added a slide');
             return redirect(route('admin.dashboard'))->with('success', 'Slide added successfully');
         }
     }
@@ -366,21 +364,12 @@ class Controller extends BaseController
             // Save the changes to the database
             $slide->save();
 
-            // Add activity log
-            $user_data['name'] = $request->user_add_name;
-            $user_data['email'] = $request->user_add_email;
-            $user_data['activity'] = $request->user_add_activity;
-
-            Activity_logs::create($user_data);
-
+            $this->logActivity('Edited a slide');
             DB::commit();
 
-            // Redirect the user or return a response as needed
             return redirect(route('admin.dashboard'))->with('success', 'Slide updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-
-            // Handle the exception, log it, or return an error response
             return redirect()->back()->with('error', 'An error occurred while updating the slide.');
         }
     }
@@ -417,16 +406,9 @@ class Controller extends BaseController
 
             }
 
-            // Add activity log
-            $user_data['name'] = $request->user_add_name;
-            $user_data['email'] = $request->user_add_email;
-            $user_data['activity'] = $request->user_add_activity;
-
-            Activity_logs::create($user_data);
-
+            $this->logActivity('Replaced a slide video');
             DB::commit();
 
-            // Redirect or return a response
             return redirect(route('admin.dashboard'))->with('success', 'Slide updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -441,14 +423,8 @@ class Controller extends BaseController
         // Update the status column to the desired value
         $slide->update(['status' => 'published']);
 
-        //Add activity log
-        $user_data['name'] = $request->user_add_name;
-        $user_data['email'] = $request->user_add_email;
-        $user_data['activity'] = $request->user_add_activity;
-        Activity_logs::create($user_data);
-        return redirect(route('admin.dashboard'))->with('success', 'Slide updated successfully');
-
-
+        $this->logActivity('Published a slide');
+        return redirect(route('admin.dashboard'))->with('success', 'Slide published successfully');
     }
 
 
@@ -457,21 +433,8 @@ class Controller extends BaseController
         // Update the status column to the desired value
         $slide->update(['status' => 'rejected']);
 
-        //Add activity log
-        $user_data['name'] = $request->user_add_name;
-        $user_data['email'] = $request->user_add_email;
-        $user_data['activity'] = $request->user_add_activity;
-
-        Activity_logs::create($user_data);
-
-
-
-
-
-
-        return redirect(route('admin.dashboard'))->with('success', 'Slide updated successfully');
-
-
+        $this->logActivity('Published a slide');
+        return redirect(route('admin.dashboard'))->with('success', 'Slide published successfully');
     }
 
 
@@ -490,19 +453,9 @@ class Controller extends BaseController
 
 
     public function destroy(Slides $slide, Request $request){
-        DB::transaction(function () use ($slide, $request) {
-            // Delete the slide
-            $slide->delete();
-
-            // Add activity log
-            $user_data['name'] = $request->user_add_name;
-            $user_data['email'] = $request->user_add_email;
-            $user_data['activity'] = $request->user_add_activity;
-
-            Activity_logs::create($user_data);
-        });
-
-        return redirect(route('admin.dashboard'))->with('success', 'Slide Deleted successfully');
+        $slide->delete();
+        $this->logActivity('Deleted a slide');
+        return redirect(route('admin.dashboard'))->with('success', 'Slide deleted successfully');
     }
 
 
@@ -597,33 +550,21 @@ class Controller extends BaseController
 
 
     function destroyUser(User $user){
-        // dd($user);
-
-        if($user->role !== 'user'){
-
-            return redirect(route('admin.users'))->with('error', 'This is admin');
-        }else{
-             $user->delete();
-              return redirect(route('admin.users'))->with('success', 'User Deleted successfully');
+        if(Auth::user()->role !== 'master_admin'){
+            return redirect()->route('admin.dashboard');
         }
-
+        $user->delete();
+        return redirect(route('admin.users'))->with('success', 'User Deleted successfully');
     }
 
 
 
     function pendingSlides(){
-
-
-
-        if(Auth::user()->role !== 'user'){
-            $slides = Slides::where('status', '=', 'pending')->get();
-
-            return view('admin.pending', ['slides' => $slides] + $this->data);
-        } else {
+        if(Auth::user()->role !== 'master_admin'){
             return redirect()->route('admin.dashboard');
         }
-
-
+        $slides = Slides::where('status', '=', 'pending')->get();
+        return view('admin.pending', ['slides' => $slides] + $this->data);
     }
 
 
