@@ -538,6 +538,26 @@
         <div class="loader-text">Loading&hellip;</div>
     </div>
 
+    <script>
+        // Registered immediately, before the render-blocking CDN <script> tags
+        // further down, so this failsafe fires even if those hosts are
+        // unreachable (e.g. a LAN deployment with no outbound internet).
+        window.__hideLoader = (function() {
+            var hidden = false;
+            return function() {
+                if (hidden) return;
+                hidden = true;
+                var el = document.getElementById('page-loader');
+                if (!el) return;
+                el.style.opacity = '0';
+                setTimeout(function() {
+                    el.style.display = 'none';
+                }, 320);
+            };
+        })();
+        setTimeout(window.__hideLoader, 4000);
+    </script>
+
     <div class="container-scroller">
 
         <!-- Top Navbar -->
@@ -659,14 +679,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Hide page loader
-        window.addEventListener('load', function() {
-            var el = document.getElementById('page-loader');
-            el.style.opacity = '0';
-            setTimeout(function() {
-                el.style.display = 'none';
-            }, 320);
-        });
+        // Hide page loader once the DOM is parsed — don't wait on external
+        // CDN scripts, images, or slide videos like window.load would.
+        // (A failsafe timeout is also registered earlier, at the top of
+        // <body>, in case these render-blocking CDN scripts never load.)
+        document.addEventListener('DOMContentLoaded', window.__hideLoader);
 
         // Manual navbar dropdown — works regardless of Bootstrap version
         $(document).ready(function() {
