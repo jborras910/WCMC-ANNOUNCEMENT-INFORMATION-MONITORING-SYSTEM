@@ -50,7 +50,7 @@
             <td>{{ $user->department ?? '—' }}</td>
             <td>
               <span class="badge badge-{{ $user->role === 'master_admin' ? 'danger' : 'secondary' }}">
-                {{ $user->role ?? 'user' }}
+                {{ $user->role ?: 'user' }}
               </span>
             </td>
             <td class="text-center">
@@ -61,7 +61,7 @@
             <td class="text-center">
               <div class="dropdown">
                 <button class="btn btn-sm btn-success text-white dropdown-toggle" type="button"
-                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  data-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false">
                   <i class="mdi mdi-cog mr-1"></i>Action
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
