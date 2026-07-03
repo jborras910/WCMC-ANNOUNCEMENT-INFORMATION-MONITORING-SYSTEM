@@ -61,7 +61,7 @@
             <td class="text-center">
               <div class="dropdown">
                 <button class="btn btn-sm btn-success text-white dropdown-toggle" type="button"
-                  data-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false">
+                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <i class="mdi mdi-cog mr-1"></i>Action
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
@@ -69,7 +69,7 @@
                     <i class="mdi mdi-pencil mr-2 text-primary"></i>Edit
                   </a>
                   <a class="dropdown-item text-danger" href="#"
-                    data-toggle="modal" data-target="#deleteModal{{ $user->id }}">
+                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ $user->id }}">
                     <i class="mdi mdi-delete mr-2"></i>Delete
                   </a>
                 </div>
@@ -84,14 +84,14 @@
                         <h6 class="modal-title text-danger">
                           <i class="mdi mdi-alert-circle mr-1"></i>Confirm Delete
                         </h6>
-                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        <button type="button" class="close" data-bs-dismiss="modal"><span>&times;</span></button>
                       </div>
                       <div class="modal-body">
                         Are you sure you want to delete
                         <strong class="text-capitalize">{{ $user->first_name }} {{ $user->last_name }}</strong>?
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-danger btn-sm text-white">Delete</button>
                       </div>
                     </div>
