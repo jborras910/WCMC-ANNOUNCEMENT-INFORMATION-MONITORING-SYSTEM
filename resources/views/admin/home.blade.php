@@ -175,7 +175,7 @@
               <div class="thumb-wrap"
                 data-video-src="{{ asset('image_upload/' . $slide->file) }}"
                 data-video-title="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}">
-                <video preload="metadata" muted>
+                <video preload="none" muted>
                   <source src="{{ asset('image_upload/' . $slide->file) }}#t=0.5" type="video/mp4">
                 </video>
                 <div class="thumb-overlay">
