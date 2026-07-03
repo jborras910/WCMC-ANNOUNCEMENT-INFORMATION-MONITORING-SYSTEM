@@ -626,7 +626,9 @@
                                 <span class="menu-title">Users</span>
                             </a>
                         </li>
+                    @endif
 
+                    @if (in_array(Auth()->user()->role, ['master_admin', 'ims_admin']))
                         <li class="nav-item {{ request()->routeIs('pendingSlides') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('pendingSlides') }}">
                                 <i class="mdi mdi-lan-pending menu-icon"></i>
@@ -700,6 +702,26 @@
                 if (!$(e.target).closest('.nav-profile').length) {
                     $('.nav-profile .dropdown-menu').removeClass('show');
                     $('.nav-profile').removeClass('show');
+                }
+            });
+
+            // Manual dropdown toggle for everything else (e.g. table row Action
+            // menus) — this vendor bundle's Bootstrap build doesn't register its
+            // own data-toggle="dropdown" click handler, so without this the
+            // buttons are inert.
+            $(document).on('click', '[data-toggle="dropdown"]', function(e) {
+                if ($(this).closest('.nav-profile').length) return;
+                e.preventDefault();
+                e.stopPropagation();
+                var menu = $(this).next('.dropdown-menu');
+                var wasOpen = menu.hasClass('show');
+                $('.dropdown-menu.show').not('.nav-profile .dropdown-menu').removeClass('show');
+                if (!wasOpen) menu.addClass('show');
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.dropdown').length) {
+                    $('.dropdown-menu.show').not('.nav-profile .dropdown-menu').removeClass('show');
                 }
             });
         });
