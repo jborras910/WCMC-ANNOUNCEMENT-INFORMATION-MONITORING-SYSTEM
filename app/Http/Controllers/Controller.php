@@ -540,6 +540,7 @@ class Controller extends BaseController
             'username' => 'required|',
             'password' => 'nullable|string', // Password is now nullable
             'status' => 'nullable|string',
+            'role' => 'nullable|string',
         ]);
 
         // If password is provided, hash it; otherwise, remove it from the validated data
