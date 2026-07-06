@@ -420,7 +420,7 @@ class Controller extends BaseController
 
     public function publishFile(Request $request, Slides $slide)
     {
-        if(!in_array(Auth::user()->role, ['master_admin', 'ims_admin'])){
+        if(!in_array(Auth::user()->role, ['master_admin', 'admin'])){
             return redirect()->route('admin.dashboard');
         }
 
@@ -434,7 +434,7 @@ class Controller extends BaseController
 
     public function rejectFile(Request $request, Slides $slide)
     {
-        if(!in_array(Auth::user()->role, ['master_admin', 'ims_admin'])){
+        if(!in_array(Auth::user()->role, ['master_admin', 'admin'])){
             return redirect()->route('admin.dashboard');
         }
 
@@ -568,7 +568,7 @@ class Controller extends BaseController
 
 
     function pendingSlides(){
-        if(!in_array(Auth::user()->role, ['master_admin', 'ims_admin'])){
+        if(!in_array(Auth::user()->role, ['master_admin', 'admin'])){
             return redirect()->route('admin.dashboard');
         }
         $slides = Slides::where('status', '=', 'pending')->get();

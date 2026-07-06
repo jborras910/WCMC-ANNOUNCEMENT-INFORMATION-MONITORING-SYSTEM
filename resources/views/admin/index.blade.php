@@ -628,7 +628,7 @@
                         </li>
                     @endif
 
-                    @if (in_array(Auth()->user()->role, ['master_admin', 'ims_admin']))
+                    @if (in_array(Auth()->user()->role, ['master_admin', 'admin']))
                         <li class="nav-item {{ request()->routeIs('pendingSlides') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('pendingSlides') }}">
                                 <i class="mdi mdi-lan-pending menu-icon"></i>

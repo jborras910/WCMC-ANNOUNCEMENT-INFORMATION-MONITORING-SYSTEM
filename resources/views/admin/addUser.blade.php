@@ -35,6 +35,7 @@
           <label>Role</label>
           <select name="role" class="form-control">
             <option value="faculty" {{ old('role') === 'faculty' ? 'selected' : '' }}>Faculty</option>
+            <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
             <option value="master_admin" {{ old('role') === 'master_admin' ? 'selected' : '' }}>Master Admin</option>
           </select>
         </div>
