@@ -21,6 +21,7 @@ route::get('test/page', function (){
 //user and guest
 Route::get('/', [Controller::class, 'welcome'])->name('welcome');
 Route::get('/welcome-queue', [Controller::class, 'welcomeQueue'])->name('welcomeQueue');
+Route::get('/slides/current', [Controller::class, 'currentSlides'])->name('slides.current');
 
 
 Route::get('/TableData', [Controller::class, 'dataTable'])->name('dataTable');

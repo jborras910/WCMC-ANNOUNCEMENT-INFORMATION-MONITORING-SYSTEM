@@ -163,7 +163,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-success btn-sm text-white">
+          <button type="submit" class="btn btn-success btn-sm text-white" id="approveSubmitBtn">
             <i class="mdi mdi-check mr-1"></i>Publish
           </button>
         </div>
@@ -193,7 +193,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-danger btn-sm text-white">
+          <button type="submit" class="btn btn-danger btn-sm text-white" id="rejectSubmitBtn">
             <i class="mdi mdi-close mr-1"></i>Reject
           </button>
         </div>
@@ -254,6 +254,21 @@ $(document).on('click', '.btn-reject', function () {
   $('#rejectFileName').text(name);
   $('#rejectDept').text(dept);
   $('#rejectModal').modal('show');
+});
+
+// Show a spinner on the modal's submit button so staff get feedback instead
+// of wondering if their click registered, and can't double-submit.
+function showButtonSpinner(button, label) {
+  button.prop('disabled', true);
+  button.html('<span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> ' + label);
+}
+
+$('#approveForm').on('submit', function () {
+  showButtonSpinner($('#approveSubmitBtn'), 'Publishing…');
+});
+
+$('#rejectForm').on('submit', function () {
+  showButtonSpinner($('#rejectSubmitBtn'), 'Rejecting…');
 });
 </script>
 @endsection

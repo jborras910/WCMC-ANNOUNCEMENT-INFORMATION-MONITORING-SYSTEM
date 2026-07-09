@@ -32,7 +32,7 @@
       Your browser does not support the video tag.
     </video>
 
-    <form method="post" action="{{ route('slide.updateVideo', ['slide' => $slide]) }}" enctype="multipart/form-data">
+    <form method="post" action="{{ route('slide.updateVideo', ['slide' => $slide]) }}" enctype="multipart/form-data" id="updateVideoForm">
       @csrf @method('put')
       <input type="hidden" name="user_add_name" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
       <input type="hidden" name="user_add_email" value="{{ Auth()->user()->email }}">
@@ -47,7 +47,7 @@
       </div>
 
       <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary" id="updateVideoBtn">
           <i class="mdi mdi-upload"></i> Update Slide
         </button>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
@@ -58,7 +58,7 @@
 
     @elseif(in_array($extension, ['jpg','jpeg','png','gif']))
 
-    <form method="post" action="{{ route('slide.update', ['slide' => $slide]) }}" enctype="multipart/form-data">
+    <form method="post" action="{{ route('slide.update', ['slide' => $slide]) }}" enctype="multipart/form-data" id="updateImageForm">
       @csrf @method('put')
       <div class="form-section-title">Current Image</div>
       <img src="{{ asset('image_upload/' . $slide->file) }}"
@@ -80,7 +80,7 @@
       </div>
 
       <div class="d-flex align-items-center">
-        <button type="submit" class="btn btn-primary mr-2">
+        <button type="submit" class="btn btn-primary mr-2" id="updateImageBtn">
           <i class="mdi mdi-content-save mr-1"></i>Save Changes
         </button>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Cancel</a>
@@ -116,6 +116,28 @@
     video.innerHTML = '';
     video.appendChild(source);
     video.load();
+  }
+
+  // Uploads can take a while — disable the button and show a spinner so staff
+  // get feedback instead of wondering if their click registered (and can't
+  // accidentally double-submit while it's still uploading).
+  function showButtonSpinner(button, label) {
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> ' + label;
+  }
+
+  var updateVideoForm = document.getElementById('updateVideoForm');
+  if (updateVideoForm) {
+    updateVideoForm.addEventListener('submit', function() {
+      showButtonSpinner(document.getElementById('updateVideoBtn'), 'Uploading…');
+    });
+  }
+
+  var updateImageForm = document.getElementById('updateImageForm');
+  if (updateImageForm) {
+    updateImageForm.addEventListener('submit', function() {
+      showButtonSpinner(document.getElementById('updateImageBtn'), 'Saving…');
+    });
   }
 </script>
 @endsection

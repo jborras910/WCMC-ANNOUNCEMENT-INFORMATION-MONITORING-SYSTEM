@@ -796,6 +796,58 @@
 
             videoPlay(0); // Play the first video
 
+            // The video list above is only what the server handed us on page
+            // load — a slide added, edited, or (re)approved afterwards would
+            // otherwise never show up until someone physically reloads the TV.
+            // Poll for the current list instead and swap it in live.
+            var SLIDE_LIST_URL = '{{ route('slides.current') }}';
+            var SLIDE_LIST_POLL_INTERVAL = 60000;
+
+            function refreshSlideList() {
+                fetch(SLIDE_LIST_URL, {
+                        cache: 'no-store'
+                    })
+                    .then(function(res) {
+                        return res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status));
+                    })
+                    .then(function(data) {
+                        var freshUrls = (data.videos || []).map(function(v) {
+                            return v.url;
+                        });
+                        // Don't blank out a working display over a transient empty/bad response.
+                        if (freshUrls.length === 0) return;
+
+                        var changed = freshUrls.length !== videoSource.length ||
+                            freshUrls.some(function(url, idx) {
+                                return url !== videoSource[idx];
+                            });
+                        if (!changed) return;
+
+                        // Drop cached blobs for videos no longer in the list so memory
+                        // doesn't grow unbounded over days/weeks of uptime.
+                        var freshSet = {};
+                        freshUrls.forEach(function(u) {
+                            freshSet[u] = true;
+                        });
+                        blobUrlCache.forEach(function(objectUrl, url) {
+                            if (!freshSet[url]) {
+                                URL.revokeObjectURL(objectUrl);
+                                blobUrlCache.delete(url);
+                            }
+                        });
+
+                        videoSource = freshUrls;
+                        videoCount = videoSource.length;
+                        if (i >= videoCount) i = 0;
+                        console.log('Slide list updated — ' + videoCount + ' video(s) now available.');
+                    })
+                    .catch(function(err) {
+                        console.warn('Could not refresh slide list: ', err);
+                    });
+            }
+
+            setInterval(refreshSlideList, SLIDE_LIST_POLL_INTERVAL);
+
             // Live clock
             function tickClock() {
                 var now = new Date();

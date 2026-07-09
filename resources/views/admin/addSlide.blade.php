@@ -51,7 +51,7 @@
     </div>
     <hr>
 
-    <form method="post" action="{{ route('addVideoslide.post') }}" enctype="multipart/form-data">
+    <form method="post" action="{{ route('addVideoslide.post') }}" enctype="multipart/form-data" id="addSlideForm">
       @if($errors->any())
         <script>
           @foreach($errors->all() as $error)
@@ -77,7 +77,7 @@
       <input type="hidden" name="user_add_activity" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }} Added Slide">
 
       <div style="display:flex;align-items:center;gap:10px;margin-top:16px;">
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary" id="addSlideBtn">
           <i class="mdi mdi-upload"></i> Upload Slide
         </button>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
@@ -108,5 +108,14 @@
     video.style.display = 'block';
     video.load();
   }
+
+  // Video uploads can take a while — disable the button and show a spinner so
+  // staff get feedback instead of wondering if their click registered (and
+  // can't accidentally double-submit while it's still uploading).
+  document.getElementById('addSlideForm').addEventListener('submit', function() {
+    var btn = document.getElementById('addSlideBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Uploading…';
+  });
 </script>
 @endsection

@@ -78,6 +78,24 @@ class Controller extends BaseController
         return view('welcome-queue', ['slides' => $slides]);
     }
 
+    // Polled from the lobby TV pages (welcome / welcome-queue) so a newly
+    // added, edited, or (re)approved slide shows up automatically — without
+    // this, the display only ever sees the slide list it was handed on the
+    // last page load/reload.
+    public function currentSlides(){
+        $videos = Slides::whereNotIn('status', ['pending', 'rejected'])
+            ->orderBy('id')
+            ->get()
+            ->map(function ($slide) {
+                return [
+                    'id' => $slide->id,
+                    'url' => asset('image_upload/' . $slide->file),
+                ];
+            });
+
+        return response()->json(['videos' => $videos]);
+    }
+
 
     public function filter(Request $request){
         $start_date = $request->start_date;
