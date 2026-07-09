@@ -12,6 +12,11 @@
             background-color: black !important;
         }
 
+        .video-main-container {
+            border: 2px solid red !important;
+
+        }
+
         .logo {
             position: fixed !important;
             width: 200px !important;

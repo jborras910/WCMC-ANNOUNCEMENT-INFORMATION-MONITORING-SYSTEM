@@ -71,6 +71,13 @@ class Controller extends BaseController
         return view('welcome', ['slides' => $slides]);
     }
 
+    public function welcomeQueue(){
+
+        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->get();
+
+        return view('welcome-queue', ['slides' => $slides]);
+    }
+
 
     public function filter(Request $request){
         $start_date = $request->start_date;
