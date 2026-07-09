@@ -474,6 +474,15 @@
 
             var i = 0;
             var videoCount = videoSource.length;
+            var consecutiveFailures = 0;
+
+            function playNext() {
+                i++;
+                if (i === videoCount) {
+                    i = 0;
+                }
+                videoPlay(i);
+            }
 
             function videoPlay(videoNum) {
                 var videoPlayer = document.getElementById("videoPlayer");
@@ -498,11 +507,21 @@
             }
 
             document.getElementById('videoPlayer').addEventListener('ended', function() {
-                i++;
-                if (i === videoCount) {
-                    i = 0;
+                consecutiveFailures = 0;
+                playNext();
+            }, false);
+
+            // A broken/missing file must not freeze the display on the spinner forever —
+            // skip to the next slide instead. If every slide fails, stop retrying.
+            document.getElementById('videoPlayer').addEventListener('error', function() {
+                console.error('Failed to load video source: ', videoSource[i]);
+                consecutiveFailures++;
+                if (consecutiveFailures >= videoCount) {
+                    console.error('All video sources failed to load.');
+                    $('#preloader').html('<span style="color:#fff;font-weight:700;">Unable to load announcements.</span>').fadeIn(200);
+                    return;
                 }
-                videoPlay(i);
+                playNext();
             }, false);
 
             document.getElementById('videoPlayer').addEventListener('timeupdate', function() {
