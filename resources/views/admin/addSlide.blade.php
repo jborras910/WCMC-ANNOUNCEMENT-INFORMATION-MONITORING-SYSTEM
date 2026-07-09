@@ -63,7 +63,7 @@
 
       <div class="form-group">
         <label class="font-weight-semibold">Upload Video <span class="text-muted small">(MP4 only, max 100MB)</span></label>
-        <input name="file_name" type="file" class="form-control" accept="video/*" required onchange="previewVideo(event)">
+        <input name="file_name" type="file" class="form-control" accept="video/mp4,.mp4" required onchange="previewVideo(event)">
       </div>
 
       <video id="videoPreview" controls>

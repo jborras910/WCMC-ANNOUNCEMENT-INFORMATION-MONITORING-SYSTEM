@@ -41,7 +41,7 @@
       <div class="form-section-title">Replace Video</div>
       <div class="form-group">
         <label>Upload New Video <span class="text-muted" style="text-transform:none;font-weight:400;">(MP4 only, max 100MB)</span></label>
-        <input type="file" name="new_file_name" class="form-control" accept="video/*" required
+        <input type="file" name="new_file_name" class="form-control" accept="video/mp4,.mp4" required
           onchange="previewNewVideo(event)">
         <input type="hidden" name="current_file" value="{{ $slide->file }}">
       </div>

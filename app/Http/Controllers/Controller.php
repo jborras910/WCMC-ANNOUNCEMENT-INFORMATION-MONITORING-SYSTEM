@@ -281,7 +281,12 @@ class Controller extends BaseController
 
     public function addVideoslide(Request $request){
 
-        // dd($request);
+        $request->validate([
+            'file_name' => 'required|file|mimes:mp4|max:102400', // MP4 only, 100MB max
+        ], [
+            'file_name.mimes' => 'Only MP4 video files are allowed. Please convert your video to MP4 before uploading.',
+        ]);
+
         $video = $request->file('file_name');
         $name_database = $video->getClientOriginalName();
         $data['file'] = $name_database;
@@ -387,7 +392,9 @@ class Controller extends BaseController
     {
         // Validate the request
         $request->validate([
-            'new_file_name' => 'required|file|mimes:mp4,ogg|max:50000', // Adjust max file size as needed
+            'new_file_name' => 'required|file|mimes:mp4|max:102400', // MP4 only, 100MB max
+        ], [
+            'new_file_name.mimes' => 'Only MP4 video files are allowed. Please convert your video to MP4 before uploading.',
         ]);
 
         try {
