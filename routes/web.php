@@ -52,6 +52,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::get('/slide/{slide}/edit', [Controller::class, 'editSlide'])->name('slide.edit');
     Route::put('/slide/{slide}/updateVideo', [Controller::class, 'updateVideo'])->name('slide.updateVideo');
     Route::delete('/deleteSlide/{slide}/destroy', [Controller::class, 'destroy'])->name('deleteSlide.destroy');
+    Route::post('/slides/reorder', [Controller::class, 'reorderSlides'])->name('slides.reorder');
     Route::get('/filter', [Controller::class, 'filter'])->name('filter');
 
     Route::put('/pending/{slide}/publishFile', [Controller::class, 'publishFile'])->name('slide.publishFile');

@@ -64,7 +64,7 @@ class Controller extends BaseController
     }
     public function welcome(){
 
-        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->get();
+        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->orderBy('order')->get();
 
 
 
@@ -73,7 +73,7 @@ class Controller extends BaseController
 
     public function welcomeQueue(){
 
-        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->get();
+        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->orderBy('order')->get();
 
         return view('welcome-queue', ['slides' => $slides]);
     }
@@ -84,7 +84,7 @@ class Controller extends BaseController
     // last page load/reload.
     public function currentSlides(){
         $videos = Slides::whereNotIn('status', ['pending', 'rejected'])
-            ->orderBy('id')
+            ->orderBy('order')
             ->get()
             ->map(function ($slide) {
                 return [
@@ -94,6 +94,22 @@ class Controller extends BaseController
             });
 
         return response()->json(['videos' => $videos]);
+    }
+
+    // Persists the drag-and-drop order set on the admin Slides table. The
+    // same "order" column drives playback order on the lobby TVs, so
+    // rearranging here changes the sequence videos loop in.
+    public function reorderSlides(Request $request){
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'integer|exists:slides_table,id',
+        ]);
+
+        foreach ($request->order as $position => $slideId) {
+            Slides::where('id', $slideId)->update(['order' => $position]);
+        }
+
+        return response()->json(['success' => true]);
     }
 
 
@@ -218,7 +234,7 @@ class Controller extends BaseController
 
     public function dashboard(){
 
-        $slides = Slides::all();
+        $slides = Slides::orderBy('order')->get();
         $slideCount = Slides::count();
         $userCount = User::count();
 
@@ -310,6 +326,7 @@ class Controller extends BaseController
         $data['file'] = $name_database;
         $data['added_by_email'] = $request->added_by_email;
         $data['department'] = $request->department;
+        $data['order'] = (int) Slides::max('order') + 1; // new slides play last, not first
 
 
         $name = $video->getClientOriginalName();

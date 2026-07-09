@@ -9,7 +9,7 @@ class Slides extends Model
 
     protected $table = "slides_table";
 
-    protected $fillable = ['title', 'description', 'file', 'added_by_email','department','status'];
+    protected $fillable = ['title', 'description', 'file', 'added_by_email','department','status','order'];
 
     protected $attributes = [
         'title' => '',

@@ -166,10 +166,13 @@
             <th class="text-center" style="width:150px">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="slidesSortable">
           @foreach($slides as $index => $slide)
-          <tr>
-            <td class="text-center text-muted">{{ $index + 1 }}</td>
+          <tr data-slide-id="{{ $slide->id }}">
+            <td class="text-center text-muted slide-drag-handle" style="cursor:grab;">
+              <i class="mdi mdi-drag-vertical" style="font-size:18px;vertical-align:middle;"></i>
+              <span class="slide-order-num">{{ $index + 1 }}</span>
+            </td>
 
             <td>
               <div class="thumb-wrap"
@@ -288,9 +291,43 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 $(document).ready(function () {
-  $('#dataTable').DataTable({ responsive: true, pageLength: 10 });
+  // Paging/column-sorting are disabled here on purpose — they'd fight with
+  // drag-and-drop reordering (rows moving between pages, or getting
+  // re-sorted out from under the drag). The search box still works.
+  $('#dataTable').DataTable({ responsive: true, paging: false, ordering: false, info: false, dom: 'ft' });
+
+  var slidesSortable = document.getElementById('slidesSortable');
+  if (slidesSortable) {
+    Sortable.create(slidesSortable, {
+      handle: '.slide-drag-handle',
+      animation: 150,
+      onEnd: function () {
+        var order = $(slidesSortable).find('tr').map(function () {
+          return $(this).data('slide-id');
+        }).get();
+
+        // Renumber the visible "#" column immediately so the new order reads
+        // correctly even before the save request comes back.
+        $(slidesSortable).find('tr').each(function (idx) {
+          $(this).find('.slide-order-num').text(idx + 1);
+        });
+
+        $.ajax({
+          url: '{{ route("slides.reorder") }}',
+          method: 'POST',
+          data: { order: order, _token: '{{ csrf_token() }}' }
+        }).done(function () {
+          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true });
+          Toast.fire({ icon: 'success', title: 'Slide order updated' });
+        }).fail(function () {
+          Swal.fire({ title: 'Error!', text: 'Could not save the new order. Please try again.', icon: 'error' });
+        });
+      }
+    });
+  }
 });
 
 // ── Preview: click thumbnail ──
