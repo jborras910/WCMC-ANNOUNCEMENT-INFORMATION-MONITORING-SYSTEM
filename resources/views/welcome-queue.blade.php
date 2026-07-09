@@ -182,8 +182,10 @@
             background: transparent;
             z-index: 10;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 16px;
         }
 
         .loader-spinner {
@@ -193,6 +195,13 @@
             border: 5px solid rgba(255, 255, 255, 0.25);
             border-top-color: var(--wcmc-green);
             animation: spin 0.9s linear infinite;
+        }
+
+        .preloader-label {
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
         @keyframes spin {
@@ -243,6 +252,14 @@
             box-shadow: 0 0 0 rgba(148, 214, 10, 0.6);
             animation: livePulse 1.6s ease-out infinite;
             flex-shrink: 0;
+        }
+
+        /* Queue feed unreachable — swap the pulsing "live" dot for a still, muted
+           one so the header itself signals staleness without disrupting layout. */
+        .live-dot.is-offline {
+            background: #b0b8bf;
+            box-shadow: none;
+            animation: none;
         }
 
         @keyframes livePulse {
@@ -387,6 +404,80 @@
             color: var(--wcmc-slate-light);
         }
 
+        /* Skeleton placeholder cards — shown before the first real queue data
+           arrives (or while reconnecting with nothing cached yet) instead of a
+           bare "Loading…" text. */
+        .skeleton-card {
+            border-top-color: #e3eaf1;
+        }
+
+        .skeleton-bar {
+            display: block;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #e7eef5 25%, #f3f8fc 37%, #e7eef5 63%);
+            background-size: 400% 100%;
+            animation: skeletonShimmer 1.4s ease-in-out infinite;
+        }
+
+        .skeleton-bar--name {
+            width: 65%;
+            height: 9px;
+        }
+
+        .skeleton-bar--number {
+            width: 45%;
+            height: clamp(24px, 2.8vw, 34px);
+            margin-top: 10px;
+        }
+
+        .skeleton-bar--window {
+            width: 38%;
+            height: 8px;
+            margin-top: 10px;
+        }
+
+        @keyframes skeletonShimmer {
+            0% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0 50%;
+            }
+        }
+
+        /* Prominent reconnecting banner — shown whenever the AQS feed is
+           unreachable, even while last-known numbers are still on screen below
+           it, so staleness is obvious at a glance and not just a footnote. */
+        .reconnect-banner {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(192, 57, 43, 0.12);
+            color: #c0392b;
+            font-weight: 800;
+            font-size: clamp(10px, 0.95vw, 12px);
+            letter-spacing: 0.3px;
+            text-align: center;
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin-bottom: clamp(10px, 1.4vw, 14px);
+        }
+
+        .reconnect-banner.is-visible {
+            display: flex;
+        }
+
+        .reconnect-banner__dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #c0392b;
+            flex-shrink: 0;
+            animation: livePulse 1.6s ease-out infinite;
+        }
+
         .queue-panel__footer {
             text-align: center;
             font-size: clamp(11px, 1vw, 13px);
@@ -409,7 +500,7 @@
 
     <div class="top-bar">
         <div class="top-bar__brand">
-            <img src="assets/wcmc_logo_1.png" alt="World Citi Medical Center">
+            <img src="assets/icon 1.png" alt="World Citi Medical Center">
             <div class="top-bar__title">
                 <strong>World Citi Medical Center</strong>
                 <span>Announcement & Information Monitoring</span>
@@ -446,6 +537,10 @@
             </div>
 
             <div class="queue-panel__body">
+                <div class="reconnect-banner" id="reconnectBanner">
+                    <span class="reconnect-banner__dot"></span>
+                    <span>Reconnecting to queue system…</span>
+                </div>
                 <div class="section-summary" id="sectionSummary">Loading…</div>
                 <div class="section-grid" id="sectionGrid">
                     <div class="queue-panel__empty">Loading queue status…</div>
@@ -476,6 +571,146 @@
             var videoCount = videoSource.length;
             var consecutiveFailures = 0;
 
+            // The lobby TVs are on WiFi only, which drops mid-stream. Instead of
+            // letting <video> stream over the network on every loop, we fetch each
+            // clip once into a local Blob and play from that in-memory copy — once
+            // downloaded, playback no longer depends on the connection staying up.
+            var blobUrlCache = new Map(); // source URL -> local object URL
+            var pendingFetches = new Map(); // source URL -> in-flight download promise
+            var CACHE_NAME = 'wcmc-signage-video-cache-v1';
+            var hasCacheStorage = ('caches' in
+                window); // needs HTTPS/localhost; degrade gracefully on plain HTTP LAN
+            var FETCH_TIMEOUT_MS = 15000;
+            var MAX_ATTEMPTS = 3;
+
+            function delay(ms) {
+                return new Promise(function(resolve) {
+                    setTimeout(resolve, ms);
+                });
+            }
+
+            function fetchWithTimeout(url, timeoutMs) {
+                var controller = new AbortController();
+                var timer = setTimeout(function() {
+                    controller.abort();
+                }, timeoutMs);
+                return fetch(url, {
+                    signal: controller.signal
+                }).finally(function() {
+                    clearTimeout(timer);
+                });
+            }
+
+            async function downloadVideo(url) {
+                var lastErr = null;
+                for (var attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                    try {
+                        var response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+                        if (hasCacheStorage) {
+                            try {
+                                var cache = await caches.open(CACHE_NAME);
+                                await cache.put(url, response.clone());
+                            } catch (e) {
+                                console.warn('Cache Storage write failed for', url, e);
+                            }
+                        }
+
+                        var blob = await response.blob();
+                        var objectUrl = URL.createObjectURL(blob);
+                        blobUrlCache.set(url, objectUrl);
+                        return objectUrl;
+                    } catch (err) {
+                        lastErr = err;
+                        console.warn('Video download attempt ' + attempt + ' failed for ' + url, err);
+                        if (attempt < MAX_ATTEMPTS) {
+                            await delay(1000 * Math.pow(2, attempt - 1)); // 1s, 2s, 4s backoff
+                        }
+                    }
+                }
+                throw lastErr;
+            }
+
+            function getVideoUrl(url) {
+                if (blobUrlCache.has(url)) {
+                    return Promise.resolve(blobUrlCache.get(url));
+                }
+                if (pendingFetches.has(url)) {
+                    return pendingFetches.get(url);
+                }
+
+                var promise = (async function() {
+                    if (hasCacheStorage) {
+                        try {
+                            var cache = await caches.open(CACHE_NAME);
+                            var cached = await cache.match(url);
+                            if (cached) {
+                                var blob = await cached.blob();
+                                var objectUrl = URL.createObjectURL(blob);
+                                blobUrlCache.set(url, objectUrl);
+                                return objectUrl;
+                            }
+                        } catch (e) {
+                            console.warn('Cache Storage read failed for', url, e);
+                        }
+                    }
+                    return downloadVideo(url);
+                })();
+
+                pendingFetches.set(url, promise);
+                promise.finally(function() {
+                    pendingFetches.delete(url);
+                });
+                return promise;
+            }
+
+            function preloadNext(videoNum) {
+                var nextIndex = (videoNum + 1) % videoCount;
+                getVideoUrl(videoSource[nextIndex]).catch(function(err) {
+                    console.warn('Preload failed for', videoSource[nextIndex], err);
+                });
+            }
+
+            // A broken/missing file or a stuck stall must not freeze the display
+            // forever — skip to the next slide instead. If every slide fails (the
+            // whole connection is down), keep retrying on a timer instead of giving
+            // up — the lobby TVs are WiFi-only and unreachable remotes shouldn't be
+            // the only way to recover once the network comes back.
+            var retryAllTimer = null;
+
+            function handleFailureAndAdvance() {
+                consecutiveFailures++;
+                if (consecutiveFailures >= videoCount) {
+                    console.error('All video sources failed to load. Retrying automatically...');
+                    $('#preloader').html(
+                        '<div class="loader-spinner"></div><div class="preloader-label">Reconnecting…</div>'
+                    ).fadeIn(200);
+                    scheduleRetryAll();
+                    return;
+                }
+                playNext();
+            }
+
+            function scheduleRetryAll() {
+                if (retryAllTimer) return;
+                retryAllTimer = setTimeout(function() {
+                    retryAllTimer = null;
+                    consecutiveFailures = 0;
+                    videoPlay(i);
+                }, 10000);
+            }
+
+            // Fires as soon as the browser regains network connectivity — try
+            // immediately instead of waiting out the rest of the retry interval.
+            window.addEventListener('online', function() {
+                if (!retryAllTimer) return;
+                clearTimeout(retryAllTimer);
+                retryAllTimer = null;
+                consecutiveFailures = 0;
+                videoPlay(i);
+            });
+
             function playNext() {
                 i++;
                 if (i === videoCount) {
@@ -487,12 +722,25 @@
             function videoPlay(videoNum) {
                 var videoPlayer = document.getElementById("videoPlayer");
                 var isFirstPlay = !videoPlayer.src;
-                var swap = function() {
+
+                var swap = async function() {
                     $('#videoProgressFill').css('width', '0%');
-                    videoPlayer.src = videoSource[videoNum];
+
+                    var objectUrl;
+                    try {
+                        objectUrl = await getVideoUrl(videoSource[videoNum]);
+                    } catch (err) {
+                        console.error('Failed to load video after retries: ', videoSource[videoNum], err);
+                        handleFailureAndAdvance();
+                        return;
+                    }
+
+                    consecutiveFailures = 0;
+                    videoPlayer.src = objectUrl;
                     videoPlayer.play().then(() => {
                         $('#preloader').fadeOut(200);
                         videoPlayer.style.opacity = 1;
+                        preloadNext(videoNum);
                     }).catch(err => {
                         console.error('Autoplay blocked: ', err);
                     });
@@ -507,24 +755,39 @@
             }
 
             document.getElementById('videoPlayer').addEventListener('ended', function() {
-                consecutiveFailures = 0;
                 playNext();
             }, false);
 
-            // A broken/missing file must not freeze the display on the spinner forever —
-            // skip to the next slide instead. If every slide fails, stop retrying.
-            document.getElementById('videoPlayer').addEventListener('error', function() {
-                console.error('Failed to load video source: ', videoSource[i]);
-                consecutiveFailures++;
-                if (consecutiveFailures >= videoCount) {
-                    console.error('All video sources failed to load.');
-                    $('#preloader').html('<span style="color:#fff;font-weight:700;">Unable to load announcements.</span>').fadeIn(200);
-                    return;
+            // Playback is blob-backed, so it shouldn't stall on the network once
+            // loaded — this is just a safety net against a stuck decode/render.
+            var stallTimer = null;
+
+            function clearStallTimer() {
+                if (stallTimer) {
+                    clearTimeout(stallTimer);
+                    stallTimer = null;
                 }
-                playNext();
+            }
+
+            document.getElementById('videoPlayer').addEventListener('waiting', function() {
+                if (stallTimer) return;
+                stallTimer = setTimeout(function() {
+                    console.warn('Video stalled, skipping to next slide.');
+                    stallTimer = null;
+                    handleFailureAndAdvance();
+                }, 8000);
+            }, false);
+
+            document.getElementById('videoPlayer').addEventListener('playing', clearStallTimer, false);
+
+            document.getElementById('videoPlayer').addEventListener('error', function() {
+                console.error('Video playback error for: ', videoSource[i]);
+                clearStallTimer();
+                handleFailureAndAdvance();
             }, false);
 
             document.getElementById('videoPlayer').addEventListener('timeupdate', function() {
+                clearStallTimer();
                 if (this.duration) {
                     var pct = (this.currentTime / this.duration) * 100;
                     document.getElementById('videoProgressFill').style.width = pct + '%';
@@ -557,6 +820,16 @@
             var QUEUE_POLL_INTERVAL = 6000;
             var lastSeenNumbers = {}; // section -> current_number, used to detect changes for the pulse
 
+            function renderQueueSkeleton(count) {
+                var $grid = $('#sectionGrid');
+                var card = '<div class="section-card skeleton-card">' +
+                    '<div class="section-card__top"><span class="skeleton-bar skeleton-bar--name"></span></div>' +
+                    '<span class="skeleton-bar skeleton-bar--number"></span>' +
+                    '<span class="skeleton-bar skeleton-bar--window"></span>' +
+                    '</div>';
+                $grid.html(card.repeat(count));
+            }
+
             function renderQueueSections(sections) {
                 var $grid = $('#sectionGrid');
 
@@ -566,8 +839,8 @@
                     return;
                 }
 
-                // Clear the initial "Loading…" placeholder once real data arrives.
-                $grid.find('.queue-panel__empty').remove();
+                // Clear the initial "Loading…" placeholder / skeleton cards once real data arrives.
+                $grid.find('.queue-panel__empty, .skeleton-card').remove();
 
                 $('#sectionSummary').text(sections.length + ' active section' + (sections.length === 1 ? '' : 's'));
 
@@ -623,6 +896,40 @@
                 });
             }
 
+            // While the AQS feed is unreachable, keep whatever queue numbers were
+            // last shown on screen (patients still need to see something) and only
+            // signal staleness through the reconnect banner + muted live-dot +
+            // footer note — never blank the panel out. Recovery is automatic: the
+            // poll below just keeps retrying every QUEUE_POLL_INTERVAL and clears
+            // the offline state the moment a good response comes back in.
+            function markQueueOffline() {
+                $('#queueFooter').addClass('is-offline');
+                $('.live-dot').addClass('is-offline');
+                $('#reconnectBanner').addClass('is-visible');
+
+                // Only the very first poll(s) can leave the grid with nothing real
+                // yet — once real data has rendered once, that data stays on
+                // screen as-is during subsequent outages instead of being replaced.
+                var $grid = $('#sectionGrid');
+                var hasRealData = $grid.find('.section-card').not('.skeleton-card').length > 0;
+                if (!hasRealData && $grid.find('.skeleton-card').length === 0) {
+                    renderQueueSkeleton(4);
+                    $('#sectionSummary').text('Loading…');
+                }
+            }
+
+            function markQueueOnline() {
+                $('#queueFooter').removeClass('is-offline');
+                $('.live-dot').removeClass('is-offline');
+                $('#reconnectBanner').removeClass('is-visible');
+                $('#lastUpdatedText').text('Last updated: ' + new Date().toLocaleTimeString('en-PH', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                }));
+            }
+
             function fetchQueueStatus() {
                 $.ajax({
                     url: QUEUE_API_URL,
@@ -632,21 +939,18 @@
                 }).done(function(response) {
                     if (response && response.success) {
                         renderQueueSections(response.data);
-                        $('#queueFooter').removeClass('is-offline');
-                        $('#lastUpdatedText').text('Last updated: ' + new Date().toLocaleTimeString(
-                        'en-PH', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: true
-                        }));
+                        markQueueOnline();
+                    } else {
+                        console.error('Queue API returned an unsuccessful response: ', response);
+                        markQueueOffline();
                     }
                 }).fail(function(err) {
                     console.error('Queue API unreachable: ', err);
-                    $('#queueFooter').addClass('is-offline');
+                    markQueueOffline();
                 });
             }
 
+            renderQueueSkeleton(4); // show placeholders immediately, before the first response lands
             fetchQueueStatus();
             setInterval(fetchQueueStatus, QUEUE_POLL_INTERVAL);
         });
