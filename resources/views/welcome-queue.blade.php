@@ -430,7 +430,7 @@
 
                 <video id="videoPlayer" autoplay muted playsinline preload="metadata"></video>
 
-                <div class="muted-chip">🔇 Muted</div>
+                {{-- <div class="muted-chip">🔇 Muted</div> --}}
 
                 <div class="video-progress">
                     <div class="video-progress__fill" id="videoProgressFill"></div>
@@ -555,7 +555,8 @@
                 sections.forEach(function(section) {
                     var key = section.section;
                     var $card = $grid.find('[data-section="' + key + '"]');
-                    var changed = lastSeenNumbers[key] !== undefined && lastSeenNumbers[key] !== section.current_number;
+                    var changed = lastSeenNumbers[key] !== undefined && lastSeenNumbers[key] !== section
+                        .current_number;
                     lastSeenNumbers[key] = section.current_number;
 
                     if ($card.length === 0) {
@@ -613,7 +614,8 @@
                     if (response && response.success) {
                         renderQueueSections(response.data);
                         $('#queueFooter').removeClass('is-offline');
-                        $('#lastUpdatedText').text('Last updated: ' + new Date().toLocaleTimeString('en-PH', {
+                        $('#lastUpdatedText').text('Last updated: ' + new Date().toLocaleTimeString(
+                        'en-PH', {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit',
