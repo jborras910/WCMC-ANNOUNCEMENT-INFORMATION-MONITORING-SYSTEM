@@ -948,23 +948,23 @@
                 });
             }
 
-            // While the AQS feed is unreachable, keep whatever queue numbers were
-            // last shown on screen (patients still need to see something) and only
-            // signal staleness through the reconnect banner + muted live-dot +
-            // footer note — never blank the panel out. Recovery is automatic: the
-            // poll below just keeps retrying every QUEUE_POLL_INTERVAL and clears
-            // the offline state the moment a good response comes back in.
+            // While the AQS feed is unreachable, swap the section cards for
+            // skeleton placeholders rather than leaving potentially-stale numbers
+            // on screen, plus signal staleness through the reconnect banner +
+            // muted live-dot + footer note. Recovery is automatic: the poll below
+            // just keeps retrying every QUEUE_POLL_INTERVAL and clears the
+            // offline state the moment a good response comes back in.
             function markQueueOffline() {
                 $('#queueFooter').addClass('is-offline');
                 $('.live-dot').addClass('is-offline');
                 $('#reconnectBanner').addClass('is-visible');
 
-                // Only the very first poll(s) can leave the grid with nothing real
-                // yet — once real data has rendered once, that data stays on
-                // screen as-is during subsequent outages instead of being replaced.
+                // Swap whatever's on screen — including last-known real numbers —
+                // for skeleton placeholders while the feed is down, so nobody acts
+                // on a queue number that might no longer be accurate. Guarded so
+                // we don't re-render every failed poll once skeletons are already showing.
                 var $grid = $('#sectionGrid');
-                var hasRealData = $grid.find('.section-card').not('.skeleton-card').length > 0;
-                if (!hasRealData && $grid.find('.skeleton-card').length === 0) {
+                if ($grid.find('.skeleton-card').length === 0) {
                     renderQueueSkeleton(4);
                     $('#sectionSummary').text('Loading…');
                 }
