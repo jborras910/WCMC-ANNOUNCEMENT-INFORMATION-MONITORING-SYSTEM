@@ -870,7 +870,7 @@
             // Update this URL if the queuing server's address changes.
             var QUEUE_API_URL = 'http://192.168.0.228:8989/api/aqs/current';
             var QUEUE_POLL_INTERVAL = 6000;
-            var lastSeenNumbers = {}; // section -> current_number, used to detect changes for the pulse
+            var lastSeenNumbers = {}; // section -> queue_code, used to detect changes for the pulse
 
             function renderQueueSkeleton(count) {
                 var $grid = $('#sectionGrid');
@@ -900,8 +900,8 @@
                     var key = section.section;
                     var $card = $grid.find('[data-section="' + key + '"]');
                     var changed = lastSeenNumbers[key] !== undefined && lastSeenNumbers[key] !== section
-                        .current_number;
-                    lastSeenNumbers[key] = section.current_number;
+                        .queue_code;
+                    lastSeenNumbers[key] = section.queue_code;
 
                     if ($card.length === 0) {
                         $card = $('<div>')
@@ -927,7 +927,7 @@
                     $card.find('.section-card__name').text(section.section);
                     $card.find('.section-card__window').text(section.window ? section.window : '');
 
-                    var $number = $card.find('.section-card__number').text(section.current_number);
+                    var $number = $card.find('.section-card__number').text(section.queue_code);
                     if (changed) {
                         $number.removeClass('pulse');
                         void $number[0].offsetWidth; // restart animation
