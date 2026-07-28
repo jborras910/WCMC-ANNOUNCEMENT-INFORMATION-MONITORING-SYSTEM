@@ -69,7 +69,7 @@
 @endif
 
 {{-- ── Stat Cards ── --}}
-@if(Auth()->user()->role === 'master_admin')
+@can('manage-users')
 <div class="row mb-4">
   <div class="col-xl-3 col-md-6 mb-3">
     <div class="card border-0 shadow-sm h-100" style="border-radius:10px;overflow:hidden;">
@@ -144,15 +144,17 @@
     </div>
   </div>
 </div>
-@endif
+@endcan
 
 {{-- ── Slide Table ── --}}
 <div class="card shadow-sm" style="border:none;border-radius:8px;overflow:hidden;">
   <div class="table-card-header d-flex justify-content-between align-items-center">
     <h5><i class="mdi mdi-filmstrip mr-2"></i>Slides</h5>
-    <a href="{{ route('admin.addSlide') }}" class="btn-add">
-      <i class="mdi mdi-plus mr-1"></i>Add Slide
-    </a>
+    @can('manage-slides')
+      <a href="{{ route('admin.addSlide') }}" class="btn-add">
+        <i class="mdi mdi-plus mr-1"></i>Add Slide
+      </a>
+    @endcan
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
@@ -193,8 +195,8 @@
               </div>
               <div class="file-meta">
                 <span class="text-uppercase">.{{ pathinfo($slide->file, PATHINFO_EXTENSION) }}</span>
-                @if(Auth()->user()->role === 'master_admin' && $slide->department)
-                  &middot; <i class="mdi mdi-office-building-outline"></i> {{ $slide->department }}
+                @if($slide->department && Gate::allows('view-all-departments'))
+                  &middot; <i class="mdi mdi-office-building-outline"></i> {{ $slide->department->name }}
                 @endif
               </div>
             </td>
@@ -209,15 +211,17 @@
             </td>
 
             <td class="text-center" style="white-space:nowrap;">
-              <a class="btn btn-action btn-edit mr-1"
-                href="{{ route('slide.edit', ['slide' => $slide]) }}">
-                <i class="mdi mdi-pencil mr-1"></i>Edit
-              </a>
-              <button type="button" class="btn btn-action btn-delete"
-                data-delete-url="{{ route('deleteSlide.destroy', ['slide' => $slide]) }}"
-                data-delete-name="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}">
-                <i class="mdi mdi-delete mr-1"></i>Delete
-              </button>
+              @can('manage-slides')
+                <a class="btn btn-action btn-edit mr-1"
+                  href="{{ route('slide.edit', ['slide' => $slide]) }}">
+                  <i class="mdi mdi-pencil mr-1"></i>Edit
+                </a>
+                <button type="button" class="btn btn-action btn-delete"
+                  data-delete-url="{{ route('deleteSlide.destroy', ['slide' => $slide]) }}"
+                  data-delete-name="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}">
+                  <i class="mdi mdi-delete mr-1"></i>Delete
+                </button>
+              @endcan
             </td>
           </tr>
           @endforeach

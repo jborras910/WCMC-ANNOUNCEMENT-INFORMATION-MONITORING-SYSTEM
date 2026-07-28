@@ -47,11 +47,15 @@
               {{ $user->middle_name ? $user->middle_name . ' ' : '' }}{{ $user->last_name }}
             </td>
             <td>{{ $user->username }}</td>
-            <td>{{ $user->department ?? '—' }}</td>
+            <td>{{ $user->department->name ?? '—' }}</td>
             <td>
-              <span class="badge badge-{{ $user->role === 'master_admin' ? 'danger' : 'secondary' }}">
-                {{ $user->role ?: 'user' }}
-              </span>
+              @forelse($user->getRoleNames() as $roleName)
+                <span class="badge badge-{{ \App\Support\RoleCatalog::color($roleName) }} mr-1">
+                  {{ \App\Support\RoleCatalog::label($roleName) }}
+                </span>
+              @empty
+                <span class="badge badge-light">no role</span>
+              @endforelse
             </td>
             <td class="text-center">
               <span class="badge-pill-status {{ $user->status === 'Active' ? 's-published' : 's-rejected' }}">

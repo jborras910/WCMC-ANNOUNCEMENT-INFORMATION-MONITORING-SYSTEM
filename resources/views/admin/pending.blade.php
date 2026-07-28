@@ -89,7 +89,7 @@
               </div>
             </td>
 
-            <td>{{ $slide->department ?? '—' }}</td>
+            <td>{{ $slide->department->name ?? '—' }}</td>
 
             <td class="text-center">
               <span class="badge-pill-status s-pending">Pending</span>
@@ -99,13 +99,13 @@
               <button type="button" class="btn btn-sm btn-success text-white mr-1 btn-approve"
                 data-approve-url="{{ route('slide.publishFile', ['slide' => $slide]) }}"
                 data-slide-name="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}"
-                data-department="{{ $slide->department ?? '—' }}">
+                data-department="{{ $slide->department->name ?? '—' }}">
                 <i class="mdi mdi-check mr-1"></i>Approve
               </button>
               <button type="button" class="btn btn-sm btn-danger text-white btn-reject"
                 data-reject-url="{{ route('slide.reject', ['slide' => $slide]) }}"
                 data-slide-name="{{ pathinfo($slide->file, PATHINFO_FILENAME) }}"
-                data-department="{{ $slide->department ?? '—' }}">
+                data-department="{{ $slide->department->name ?? '—' }}">
                 <i class="mdi mdi-close mr-1"></i>Reject
               </button>
             </td>

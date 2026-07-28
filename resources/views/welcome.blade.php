@@ -126,7 +126,7 @@
             <div class="loader-spinner"></div>
         </div>
 
-        <img class="logo-badge" src="assets/wcmc_logo_1.png" alt="World Citi Medical Center">
+        <img class="logo-badge" src="{{ asset('assets/wcmc_logo_1.png') }}" alt="World Citi Medical Center">
 
         <video id="videoPlayer" autoplay muted playsinline preload="metadata"></video>
 
@@ -161,7 +161,8 @@
             var blobUrlCache = new Map(); // source URL -> local object URL
             var pendingFetches = new Map(); // source URL -> in-flight download promise
             var CACHE_NAME = 'wcmc-signage-video-cache-v1';
-            var hasCacheStorage = ('caches' in window); // needs HTTPS/localhost; degrade gracefully on plain HTTP LAN
+            var hasCacheStorage = ('caches' in
+                window); // needs HTTPS/localhost; degrade gracefully on plain HTTP LAN
             var FETCH_TIMEOUT_MS = 15000;
             var MAX_ATTEMPTS = 3;
 
@@ -382,7 +383,7 @@
             // load — a slide added, edited, or (re)approved afterwards would
             // otherwise never show up until someone physically reloads the TV.
             // Poll for the current list instead and swap it in live.
-            var SLIDE_LIST_URL = '{{ route('slides.current') }}';
+            var SLIDE_LIST_URL = '{{ $pollUrl ?? route('slides.current') }}';
             var SLIDE_LIST_POLL_INTERVAL = 60000;
 
             function refreshSlideList() {

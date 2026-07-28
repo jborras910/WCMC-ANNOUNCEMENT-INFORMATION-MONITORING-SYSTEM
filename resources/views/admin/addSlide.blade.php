@@ -70,8 +70,29 @@
         Your browser does not support the video tag.
       </video>
 
+      @if(Auth()->user()->department)
+        <div class="form-group mt-3 mb-0">
+          <label>Department</label>
+          <div>
+            <span class="badge badge-secondary" style="font-size:12px;padding:6px 12px;">
+              <i class="mdi mdi-domain mr-1"></i>{{ Auth()->user()->department->name }}
+            </span>
+            <small class="text-muted d-block mt-1">This slide will be uploaded under your department.</small>
+          </div>
+        </div>
+      @else
+        <div class="form-group mt-3">
+          <label>Department <span class="text-danger">*</span></label>
+          <select name="department_id" class="form-control" required>
+            <option value="">Select a department&hellip;</option>
+            @foreach($departments as $department)
+              <option value="{{ $department->id }}">{{ $department->name }}</option>
+            @endforeach
+          </select>
+        </div>
+      @endif
+
       <input type="hidden" name="added_by_email" value="{{ Auth()->user()->email }}">
-      <input type="hidden" name="department" value="{{ Auth()->user()->department }}">
       <input type="hidden" name="user_add_name" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }}">
       <input type="hidden" name="user_add_email" value="{{ Auth()->user()->email }}">
       <input type="hidden" name="user_add_activity" value="{{ Auth()->user()->first_name . ' ' . Auth()->user()->last_name }} Added Slide">

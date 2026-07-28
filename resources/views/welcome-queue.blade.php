@@ -500,7 +500,7 @@
 
     <div class="top-bar">
         <div class="top-bar__brand">
-            <img src="assets/icon 1.png" alt="World Citi Medical Center">
+            <img src="{{ asset('assets/icon 1.png') }}" alt="World Citi Medical Center">
             <div class="top-bar__title">
                 <strong>World Citi Medical Center</strong>
                 <span>Announcement & Information Monitoring</span>

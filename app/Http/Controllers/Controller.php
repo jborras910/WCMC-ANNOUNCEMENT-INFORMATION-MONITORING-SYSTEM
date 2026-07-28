@@ -17,6 +17,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Department;
 
 
 class Controller extends BaseController
@@ -54,7 +58,19 @@ class Controller extends BaseController
 
 
 
-    private function logActivity(string $action): void
+    // Editing/deleting a specific slide by id is gated by the "manage-slides"
+    // permission at the route level, but that alone doesn't stop a marketing
+    // user from touching a business-department slide just by guessing its id.
+    // This closes that gap: only "view-all-departments" holders (master_admin)
+    // may reach across department lines.
+    protected function authorizeSlideAccess(Slides $slide): void
+    {
+        if (Auth::user()->cannot('view-all-departments') && $slide->department_id !== Auth::user()->department_id) {
+            abort(403);
+        }
+    }
+
+    protected function logActivity(string $action): void
     {
         Activity_logs::create([
             'name'     => Auth::user()->first_name . ' ' . Auth::user()->last_name,
@@ -76,6 +92,36 @@ class Controller extends BaseController
         $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->orderBy('order')->get();
 
         return view('welcome-queue', ['slides' => $slides]);
+    }
+
+    // A department's own dedicated display screen (e.g. Marketing's lobby TV)
+    // — same player as the combined welcome() screen, just scoped to slides
+    // that belong to this department only.
+    public function departmentWelcome(Department $department){
+        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])
+            ->where('department_id', $department->id)
+            ->orderBy('order')
+            ->get();
+
+        return view('welcome', [
+            'slides' => $slides,
+            'pollUrl' => route('display.current', ['department' => $department]),
+        ]);
+    }
+
+    public function departmentCurrentSlides(Department $department){
+        $videos = Slides::whereNotIn('status', ['pending', 'rejected'])
+            ->where('department_id', $department->id)
+            ->orderBy('order')
+            ->get()
+            ->map(function ($slide) {
+                return [
+                    'id' => $slide->id,
+                    'url' => asset('image_upload/' . $slide->file),
+                ];
+            });
+
+        return response()->json(['videos' => $videos]);
     }
 
     // Polled from the lobby TV pages (welcome / welcome-queue) so a newly
@@ -105,8 +151,17 @@ class Controller extends BaseController
             'order.*' => 'integer|exists:slides_table,id',
         ]);
 
+        // Non-privileged users only ever see their own department's slides in
+        // the dashboard table, so this scopes the update the same way — a
+        // stray/forged id for another department is just silently a no-op.
+        $canViewAll = Auth::user()->can('view-all-departments');
+
         foreach ($request->order as $position => $slideId) {
-            Slides::where('id', $slideId)->update(['order' => $position]);
+            $query = Slides::where('id', $slideId);
+            if (!$canViewAll) {
+                $query->where('department_id', Auth::user()->department_id);
+            }
+            $query->update(['order' => $position]);
         }
 
         return response()->json(['success' => true]);
@@ -118,6 +173,10 @@ class Controller extends BaseController
         $end_date = $request->end_date;
 
         $query = Activity_logs::query();
+
+        if (Gate::denies('view-all-activity-logs')) {
+            $query->where('email', Auth::user()->email);
+        }
 
         if ($start_date && $end_date) {
             // Both start and end dates are provided, so apply the date filters
@@ -234,7 +293,12 @@ class Controller extends BaseController
 
     public function dashboard(){
 
-        $slides = Slides::orderBy('order')->get();
+        $slidesQuery = Slides::with('department')->orderBy('order');
+        if (Auth::user()->cannot('view-all-departments')) {
+            $slidesQuery->where('department_id', Auth::user()->department_id);
+        }
+        $slides = $slidesQuery->get();
+
         $slideCount = Slides::count();
         $userCount = User::count();
 
@@ -250,10 +314,7 @@ class Controller extends BaseController
 
 
     public function users(){
-        if(Auth::user()->role !== 'master_admin'){
-            return redirect()->route('admin.dashboard');
-        }
-        $users = User::all();
+        $users = User::with('department')->get();
         $this->data['users'] = $users;
         return view('admin.users', $this->data);
     }
@@ -261,11 +322,14 @@ class Controller extends BaseController
 
     function activity(){
 
-        $Activity_logs = Activity_logs::all();
+        $query = Activity_logs::query();
 
-        $this->data['Activity_logs'] = $Activity_logs;
+        if (Gate::denies('view-all-activity-logs')) {
+            $query->where('email', Auth::user()->email);
+        }
+
+        $this->data['Activity_logs'] = $query->get();
         return view('admin.activity', $this->data);
-
 
 
 
@@ -274,6 +338,10 @@ class Controller extends BaseController
 
 
     public function addSlide(){
+        if (!Auth::user()->department_id) {
+            $this->data['departments'] = Department::orderBy('name')->get();
+        }
+
         return view('admin.addSlide', $this->data);
     }
 
@@ -317,15 +385,17 @@ class Controller extends BaseController
 
         $request->validate([
             'file_name' => 'required|file|mimes:mp4|max:102400', // MP4 only, 100MB max
+            'department_id' => Auth::user()->department_id ? 'nullable' : 'required|exists:departments,id',
         ], [
             'file_name.mimes' => 'Only MP4 video files are allowed. Please convert your video to MP4 before uploading.',
+            'department_id.required' => 'Please select which department this slide belongs to.',
         ]);
 
         $video = $request->file('file_name');
         $name_database = $video->getClientOriginalName();
         $data['file'] = $name_database;
         $data['added_by_email'] = $request->added_by_email;
-        $data['department'] = $request->department;
+        $data['department_id'] = Auth::user()->department_id ?: $request->department_id;
         $data['order'] = (int) Slides::max('order') + 1; // new slides play last, not first
 
 
@@ -376,6 +446,7 @@ class Controller extends BaseController
 
 
     function editSlide(Slides $slide){
+        $this->authorizeSlideAccess($slide);
 
         $this->data['slide'] = $slide;
         return view('admin.editSlide', $this->data);
@@ -425,6 +496,8 @@ class Controller extends BaseController
 
     public function updateVideo(Request $request, Slides $slide)
     {
+        $this->authorizeSlideAccess($slide);
+
         // Validate the request
         $request->validate([
             'new_file_name' => 'required|file|mimes:mp4|max:102400', // MP4 only, 100MB max
@@ -469,10 +542,6 @@ class Controller extends BaseController
 
     public function publishFile(Request $request, Slides $slide)
     {
-        if(!in_array(Auth::user()->role, ['master_admin', 'admin'])){
-            return redirect()->route('admin.dashboard');
-        }
-
         // Update the status column to the desired value
         $slide->update(['status' => 'published']);
 
@@ -483,10 +552,6 @@ class Controller extends BaseController
 
     public function rejectFile(Request $request, Slides $slide)
     {
-        if(!in_array(Auth::user()->role, ['master_admin', 'admin'])){
-            return redirect()->route('admin.dashboard');
-        }
-
         // Update the status column to the desired value
         $slide->update(['status' => 'rejected']);
 
@@ -510,6 +575,8 @@ class Controller extends BaseController
 
 
     public function destroy(Slides $slide, Request $request){
+        $this->authorizeSlideAccess($slide);
+
         $slide->delete();
         $this->logActivity('Deleted a slide');
         return redirect(route('admin.dashboard'))->with('success', 'Slide deleted successfully');
@@ -522,12 +589,19 @@ class Controller extends BaseController
 
     //user controller
     function addUser(){
+        $this->data['roles'] = Role::orderBy('name')->get();
+        $this->data['permissions'] = Permission::orderBy('name')->get();
+        $this->data['departments'] = Department::orderBy('name')->get();
+
         return view('admin.addUser', $this->data);
     }
 
 
     function editUser(User $user){
         $this->data['user'] = $user;
+        $this->data['roles'] = Role::orderBy('name')->get();
+        $this->data['permissions'] = Permission::orderBy('name')->get();
+        $this->data['departments'] = Department::orderBy('name')->get();
 
         return view('admin.editUser',$this->data);
     }
@@ -536,15 +610,17 @@ class Controller extends BaseController
 
     function addUserPost(Request $request){
 
-        // dd($request);
-
         $request->validate([
-            'department' => "required",
+            'department_id' => "required|exists:departments,id",
             "first_name" => "required",
             "last_name" => "required",
             'email' => 'required|email|unique:users', // Add the table name 'users'
             'username' => 'required',
-            "password" => "required"
+            "password" => "required",
+            'roles' => 'array',
+            'roles.*' => 'exists:roles,name',
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
 
@@ -555,7 +631,7 @@ class Controller extends BaseController
         $data['email'] = $request->email;
         $data['username'] = $request->username;
         $data['password'] = Hash::make($request->password);
-        $data['department'] = $request->department;
+        $data['department_id'] = $request->department_id;
 
         $user = User::create($data);
 
@@ -565,11 +641,10 @@ class Controller extends BaseController
             return redirect(route('admin.users'))->with('error', 'Register Details are not valid');
         }
 
+        $user->syncRoles($request->input('roles', []));
+        $user->syncPermissions($request->input('permissions', []));
+
         return redirect(route('admin.users'))->with('success', 'User added successfully');
-
-
-
-        // dd($request);
     }
 
 
@@ -577,11 +652,9 @@ class Controller extends BaseController
     public function updateUser(Request $request, User $user)
     {
 
-        // dd($request);
-
         // // Validate the incoming request data
         $validatedData = $request->validate([
-            'department' => 'required',
+            'department_id' => 'required|exists:departments,id',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
@@ -589,7 +662,10 @@ class Controller extends BaseController
             'username' => 'required|',
             'password' => 'nullable|string', // Password is now nullable
             'status' => 'nullable|string',
-            'role' => 'nullable|string',
+            'roles' => 'array',
+            'roles.*' => 'exists:roles,name',
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         // If password is provided, hash it; otherwise, remove it from the validated data
@@ -599,8 +675,14 @@ class Controller extends BaseController
             unset($validatedData['password']);
         }
 
+        $roles = $validatedData['roles'] ?? [];
+        $permissions = $validatedData['permissions'] ?? [];
+        unset($validatedData['roles'], $validatedData['permissions']);
+
         // Update the user model with the validated data
         $user->update($validatedData);
+        $user->syncRoles($roles);
+        $user->syncPermissions($permissions);
 
         // Optionally, you can redirect the user back to a specific page
         return redirect()->route('admin.users')->with('success', 'User updated successfully');
@@ -608,9 +690,6 @@ class Controller extends BaseController
 
 
     function destroyUser(User $user){
-        if(Auth::user()->role !== 'master_admin'){
-            return redirect()->route('admin.dashboard');
-        }
         $user->delete();
         return redirect(route('admin.users'))->with('success', 'User Deleted successfully');
     }
@@ -618,10 +697,7 @@ class Controller extends BaseController
 
 
     function pendingSlides(){
-        if(!in_array(Auth::user()->role, ['master_admin', 'admin'])){
-            return redirect()->route('admin.dashboard');
-        }
-        $slides = Slides::where('status', '=', 'pending')->get();
+        $slides = Slides::with('department')->where('status', '=', 'pending')->get();
         return view('admin.pending', ['slides' => $slides] + $this->data);
     }
 

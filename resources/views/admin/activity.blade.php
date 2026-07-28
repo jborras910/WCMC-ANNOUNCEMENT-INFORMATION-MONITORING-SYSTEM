@@ -48,14 +48,12 @@
         </thead>
         <tbody>
           @foreach($Activity_logs as $log)
-            @if($log->email == Auth()->user()->email || Auth()->user()->role === 'master_admin')
             <tr>
               <td>{{ $log->created_at->timezone('Asia/Manila')->format('M j, Y g:i a') }}</td>
               <td>{{ $log->activity }}</td>
               <td>{{ $log->email }}</td>
               <td>{{ $log->name }}</td>
             </tr>
-            @endif
           @endforeach
         </tbody>
       </table>

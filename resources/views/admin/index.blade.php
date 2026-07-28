@@ -611,14 +611,16 @@
                         </a>
                     </li>
 
-                    <li class="nav-item {{ request()->routeIs('admin.addSlide') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('admin.addSlide') }}">
-                            <i class="mdi mdi-plus-circle menu-icon"></i>
-                            <span class="menu-title">Add Slide</span>
-                        </a>
-                    </li>
+                    @can('manage-slides')
+                        <li class="nav-item {{ request()->routeIs('admin.addSlide') ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ route('admin.addSlide') }}">
+                                <i class="mdi mdi-plus-circle menu-icon"></i>
+                                <span class="menu-title">Add Slide</span>
+                            </a>
+                        </li>
+                    @endcan
 
-                    @if (Auth()->user()->role === 'master_admin')
+                    @can('manage-users')
                         <li
                             class="nav-item {{ request()->routeIs('admin.users') || request()->routeIs('admin.addUser') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('admin.users') }}">
@@ -626,9 +628,33 @@
                                 <span class="menu-title">Users</span>
                             </a>
                         </li>
-                    @endif
+                    @endcan
 
-                    @if (in_array(Auth()->user()->role, ['master_admin', 'admin']))
+                    @can('manage-departments')
+                        <li class="nav-item {{ request()->routeIs('admin.departments') ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ route('admin.departments') }}">
+                                <i class="mdi mdi-domain menu-icon"></i>
+                                <span class="menu-title">Departments</span>
+                            </a>
+                        </li>
+                    @endcan
+
+                    @can('manage-roles')
+                        <li class="nav-item {{ request()->routeIs('admin.roles') ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ route('admin.roles') }}">
+                                <i class="mdi mdi-shield-account menu-icon"></i>
+                                <span class="menu-title">Roles</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {{ request()->routeIs('admin.permissions') ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ route('admin.permissions') }}">
+                                <i class="mdi mdi-key menu-icon"></i>
+                                <span class="menu-title">Permissions</span>
+                            </a>
+                        </li>
+                    @endcan
+
+                    @can('review-slides')
                         <li class="nav-item {{ request()->routeIs('pendingSlides') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('pendingSlides') }}">
                                 <i class="mdi mdi-lan-pending menu-icon"></i>
@@ -638,7 +664,7 @@
                                 @endif
                             </a>
                         </li>
-                    @endif
+                    @endcan
 
                     <li class="nav-item {{ request()->routeIs('admin.activity') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('admin.activity') }}">
