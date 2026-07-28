@@ -70,7 +70,17 @@
         Your browser does not support the video tag.
       </video>
 
-      @if(Auth()->user()->department)
+      @if(isset($departments))
+        <div class="form-group mt-3">
+          <label>Department <span class="text-danger">*</span></label>
+          <select name="department_id" class="form-control" required>
+            <option value="">Select a department&hellip;</option>
+            @foreach($departments as $department)
+              <option value="{{ $department->id }}">{{ $department->name }}</option>
+            @endforeach
+          </select>
+        </div>
+      @elseif(Auth()->user()->department)
         <div class="form-group mt-3 mb-0">
           <label>Department</label>
           <div>
@@ -81,14 +91,9 @@
           </div>
         </div>
       @else
-        <div class="form-group mt-3">
-          <label>Department <span class="text-danger">*</span></label>
-          <select name="department_id" class="form-control" required>
-            <option value="">Select a department&hellip;</option>
-            @foreach($departments as $department)
-              <option value="{{ $department->id }}">{{ $department->name }}</option>
-            @endforeach
-          </select>
+        <div class="alert alert-danger mt-3 mb-0">
+          Your account doesn't have a department assigned. Ask a master admin to set one
+          on your profile before you can upload slides.
         </div>
       @endif
 

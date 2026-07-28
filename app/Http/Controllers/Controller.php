@@ -352,7 +352,9 @@ class Controller extends BaseController
 
 
     public function addSlide(){
-        if (!Auth::user()->department_id) {
+        // Anyone who can see every department (master_admin) picks which
+        // department a slide belongs to; everyone else is locked to their own.
+        if (Auth::user()->can('view-all-departments')) {
             $this->data['departments'] = Department::orderBy('name')->get();
         }
 
@@ -397,9 +399,11 @@ class Controller extends BaseController
 
     public function addVideoslide(Request $request){
 
+        $canPickDepartment = Auth::user()->can('view-all-departments');
+
         $request->validate([
             'file_name' => 'required|file|mimes:mp4|max:102400', // MP4 only, 100MB max
-            'department_id' => Auth::user()->department_id ? 'nullable' : 'required|exists:departments,id',
+            'department_id' => $canPickDepartment ? 'required|exists:departments,id' : 'nullable',
         ], [
             'file_name.mimes' => 'Only MP4 video files are allowed. Please convert your video to MP4 before uploading.',
             'department_id.required' => 'Please select which department this slide belongs to.',
@@ -409,7 +413,7 @@ class Controller extends BaseController
         $name_database = $video->getClientOriginalName();
         $data['file'] = $name_database;
         $data['added_by_email'] = $request->added_by_email;
-        $data['department_id'] = Auth::user()->department_id ?: $request->department_id;
+        $data['department_id'] = $canPickDepartment ? $request->department_id : Auth::user()->department_id;
         $data['order'] = (int) Slides::max('order') + 1; // new slides play last, not first
 
 
