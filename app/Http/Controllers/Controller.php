@@ -80,18 +80,33 @@ class Controller extends BaseController
     }
     public function welcome(){
 
-        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->orderBy('order')->get();
-
-
+        $slides = $this->publicSlidesQuery()->get();
 
         return view('welcome', ['slides' => $slides]);
     }
 
     public function welcomeQueue(){
 
-        $slides = Slides::whereNotIn('status', ['pending', 'rejected'])->orderBy('order')->get();
+        $slides = $this->publicSlidesQuery()->get();
 
         return view('welcome-queue', ['slides' => $slides]);
+    }
+
+    // Shared by welcome(), welcomeQueue(), and currentSlides() — the combined
+    // lobby feed and its live-polling endpoint. When this server is
+    // dedicated to one department (DEFAULT_DISPLAY_DEPARTMENT in .env), all
+    // three only ever show that department's slides.
+    protected function publicSlidesQuery(){
+        $query = Slides::whereNotIn('status', ['pending', 'rejected'])->orderBy('order');
+
+        $defaultDepartmentSlug = config('display.default_department');
+        if ($defaultDepartmentSlug) {
+            $query->whereHas('department', function ($departmentQuery) use ($defaultDepartmentSlug) {
+                $departmentQuery->where('slug', $defaultDepartmentSlug);
+            });
+        }
+
+        return $query;
     }
 
     // A department's own dedicated display screen (e.g. Marketing's lobby TV)
@@ -129,8 +144,7 @@ class Controller extends BaseController
     // this, the display only ever sees the slide list it was handed on the
     // last page load/reload.
     public function currentSlides(){
-        $videos = Slides::whereNotIn('status', ['pending', 'rejected'])
-            ->orderBy('order')
+        $videos = $this->publicSlidesQuery()
             ->get()
             ->map(function ($slide) {
                 return [
