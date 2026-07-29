@@ -519,7 +519,7 @@
                     <div class="loader-spinner"></div>
                 </div>
 
-                <video id="videoPlayer" autoplay muted playsinline preload="metadata"></video>
+                <video id="videoPlayer" autoplay {{ ($withSound ?? false) ? '' : 'muted' }} playsinline preload="metadata"></video>
 
                 {{-- <div class="muted-chip">🔇 Muted</div> --}}
 
@@ -557,6 +557,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script type='text/javascript'>
         $(document).ready(function() {
+            var WITH_SOUND = {{ ($withSound ?? false) ? 'true' : 'false' }};
             var videoSource = [];
             @foreach ($slides as $slide)
                 videoSource.push("{{ asset('image_upload/' . $slide->file) }}");
@@ -737,12 +738,24 @@
 
                     consecutiveFailures = 0;
                     videoPlayer.src = objectUrl;
+                    videoPlayer.muted = !WITH_SOUND;
                     videoPlayer.play().then(() => {
                         $('#preloader').fadeOut(200);
                         videoPlayer.style.opacity = 1;
                         preloadNext(videoNum);
                     }).catch(err => {
                         console.error('Autoplay blocked: ', err);
+                        // Browsers reject autoplay-with-sound unless the site is
+                        // explicitly allowed to. Silent playback beats no
+                        // playback on an unattended display — fall back to it.
+                        if (WITH_SOUND && !videoPlayer.muted) {
+                            videoPlayer.muted = true;
+                            videoPlayer.play().then(() => {
+                                $('#preloader').fadeOut(200);
+                                videoPlayer.style.opacity = 1;
+                                preloadNext(videoNum);
+                            }).catch(err2 => console.error('Muted fallback also blocked: ', err2));
+                        }
                     });
                 };
 

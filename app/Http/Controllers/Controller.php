@@ -112,14 +112,14 @@ class Controller extends BaseController
 
         $slides = $this->publicSlidesQuery()->get();
 
-        return view('welcome', ['slides' => $slides]);
+        return view('welcome', ['slides' => $slides, 'withSound' => true]);
     }
 
     public function welcomeQueue(){
 
         $slides = $this->publicSlidesQuery()->get();
 
-        return view('welcome-queue', ['slides' => $slides]);
+        return view('welcome-queue', ['slides' => $slides, 'withSound' => true]);
     }
 
     // Shared by welcome(), welcomeQueue(), and currentSlides() — the combined
