@@ -151,6 +151,7 @@ class Controller extends BaseController
         return view('welcome', [
             'slides' => $slides,
             'pollUrl' => route('display.current', ['department' => $department]),
+            'withSound' => true,
         ]);
     }
 
