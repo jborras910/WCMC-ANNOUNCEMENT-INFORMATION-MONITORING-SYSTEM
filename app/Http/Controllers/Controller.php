@@ -70,13 +70,43 @@ class Controller extends BaseController
         }
     }
 
-    protected function logActivity(string $action): void
+    // $category groups log entries for the filter dropdown on /activity (e.g.
+    // "user", "role", "permission", "department", "slide"). $subjectEmail is
+    // the *affected* account when it differs from the actor — e.g. who a
+    // role was granted to — so "what happened to this person's access" is a
+    // filter, not a text search.
+    protected function logActivity(string $action, ?string $category = null, ?string $subjectEmail = null): void
     {
         Activity_logs::create([
-            'name'     => Auth::user()->first_name . ' ' . Auth::user()->last_name,
-            'email'    => Auth::user()->email,
-            'activity' => Auth::user()->first_name . ' ' . Auth::user()->last_name . ' ' . $action,
+            'name'          => Auth::user()->first_name . ' ' . Auth::user()->last_name,
+            'email'         => Auth::user()->email,
+            'activity'      => Auth::user()->first_name . ' ' . Auth::user()->last_name . ' ' . $action,
+            'category'      => $category,
+            'subject_email' => $subjectEmail,
         ]);
+    }
+
+    // Renders "added X, Y; removed Z" between two lists of role/permission
+    // names — used so audit entries say exactly what changed, not just that
+    // something did. Returns null when there's no difference to report.
+    protected function describeSetChanges(string $label, array $before, array $after): ?string
+    {
+        $added = array_values(array_diff($after, $before));
+        $removed = array_values(array_diff($before, $after));
+
+        if (!$added && !$removed) {
+            return null;
+        }
+
+        $parts = [];
+        if ($added) {
+            $parts[] = 'added ' . implode(', ', $added);
+        }
+        if ($removed) {
+            $parts[] = 'removed ' . implode(', ', $removed);
+        }
+
+        return $label . ': ' . implode('; ', $parts);
     }
     public function welcome(){
 
@@ -185,11 +215,16 @@ class Controller extends BaseController
     public function filter(Request $request){
         $start_date = $request->start_date;
         $end_date = $request->end_date;
+        $category = $request->category;
 
         $query = Activity_logs::query();
 
         if (Gate::denies('view-all-activity-logs')) {
             $query->where('email', Auth::user()->email);
+        }
+
+        if ($category) {
+            $query->where('category', $category);
         }
 
         if ($start_date && $end_date) {
@@ -205,9 +240,10 @@ class Controller extends BaseController
         }
 
         // Execute the query and retrieve the results
-        $Activity_logs = $query->get();
+        $Activity_logs = $query->orderBy('created_at', 'desc')->get();
+        $categories = Activity_logs::whereNotNull('category')->distinct()->orderBy('category')->pluck('category');
 
-        return view('admin.activity', compact('Activity_logs'));
+        return view('admin.activity', compact('Activity_logs', 'categories') + $this->data);
     }
 
 
@@ -342,12 +378,10 @@ class Controller extends BaseController
             $query->where('email', Auth::user()->email);
         }
 
-        $this->data['Activity_logs'] = $query->get();
+        $this->data['Activity_logs'] = $query->orderBy('created_at', 'desc')->get();
+        $this->data['categories'] = Activity_logs::whereNotNull('category')->distinct()->orderBy('category')->pluck('category');
+
         return view('admin.activity', $this->data);
-
-
-
-
     }
 
 
@@ -426,7 +460,7 @@ class Controller extends BaseController
         if(!$slide_insert){
             return redirect(route('admin.dashboard'))->with('error', 'Slide added failed');
         }else{
-            $this->logActivity('Added a slide');
+            $this->logActivity('Added a slide', 'slide');
             return redirect(route('admin.dashboard'))->with('success', 'Slide added successfully');
         }
     }
@@ -500,7 +534,7 @@ class Controller extends BaseController
             // Save the changes to the database
             $slide->save();
 
-            $this->logActivity('Edited a slide');
+            $this->logActivity('Edited a slide', 'slide');
             DB::commit();
 
             return redirect(route('admin.dashboard'))->with('success', 'Slide updated successfully');
@@ -546,7 +580,7 @@ class Controller extends BaseController
 
             }
 
-            $this->logActivity('Replaced a slide video');
+            $this->logActivity('Replaced a slide video', 'slide');
             DB::commit();
 
             return redirect(route('admin.dashboard'))->with('success', 'Slide updated successfully');
@@ -563,7 +597,7 @@ class Controller extends BaseController
         // Update the status column to the desired value
         $slide->update(['status' => 'published']);
 
-        $this->logActivity('Published a slide');
+        $this->logActivity('Published a slide', 'slide');
         return redirect(route('admin.dashboard'))->with('success', 'Slide published successfully');
     }
 
@@ -573,8 +607,8 @@ class Controller extends BaseController
         // Update the status column to the desired value
         $slide->update(['status' => 'rejected']);
 
-        $this->logActivity('Published a slide');
-        return redirect(route('admin.dashboard'))->with('success', 'Slide published successfully');
+        $this->logActivity('Rejected a slide', 'slide');
+        return redirect(route('admin.dashboard'))->with('success', 'Slide rejected successfully');
     }
 
 
@@ -596,7 +630,7 @@ class Controller extends BaseController
         $this->authorizeSlideAccess($slide);
 
         $slide->delete();
-        $this->logActivity('Deleted a slide');
+        $this->logActivity('Deleted a slide', 'slide');
         return redirect(route('admin.dashboard'))->with('success', 'Slide deleted successfully');
     }
 
@@ -659,8 +693,20 @@ class Controller extends BaseController
             return redirect(route('admin.users'))->with('error', 'Register Details are not valid');
         }
 
-        $user->syncRoles($request->input('roles', []));
-        $user->syncPermissions($request->input('permissions', []));
+        $roles = $request->input('roles', []);
+        $permissions = $request->input('permissions', []);
+        $user->syncRoles($roles);
+        $user->syncPermissions($permissions);
+
+        $details = array_filter([
+            $roles ? 'roles: ' . implode(', ', $roles) : null,
+            $permissions ? 'extra permissions: ' . implode(', ', $permissions) : null,
+        ]);
+        $this->logActivity(
+            'created user ' . $user->email . ($details ? ' (' . implode('; ', $details) . ')' : ''),
+            'user',
+            $user->email
+        );
 
         return redirect(route('admin.users'))->with('success', 'User added successfully');
     }
@@ -697,10 +743,31 @@ class Controller extends BaseController
         $permissions = $validatedData['permissions'] ?? [];
         unset($validatedData['roles'], $validatedData['permissions']);
 
+        // Snapshot access before it changes, so the log says exactly what moved.
+        $rolesBefore = $user->getRoleNames()->toArray();
+        $permissionsBefore = $user->getDirectPermissions()->pluck('name')->toArray();
+        $departmentBefore = optional($user->department)->name;
+
         // Update the user model with the validated data
         $user->update($validatedData);
         $user->syncRoles($roles);
         $user->syncPermissions($permissions);
+
+        $roleChange = $this->describeSetChanges('roles', $rolesBefore, $roles);
+        $permissionChange = $this->describeSetChanges('extra permissions', $permissionsBefore, $permissions);
+        $departmentAfter = optional($user->fresh()->department)->name;
+        $departmentChange = $departmentBefore !== $departmentAfter
+            ? 'department: ' . ($departmentBefore ?? 'none') . ' -> ' . ($departmentAfter ?? 'none')
+            : null;
+
+        $changes = array_filter([$roleChange, $permissionChange, $departmentChange]);
+        if ($changes) {
+            $this->logActivity(
+                'updated access for ' . $user->email . ' (' . implode('; ', $changes) . ')',
+                'user',
+                $user->email
+            );
+        }
 
         // Optionally, you can redirect the user back to a specific page
         return redirect()->route('admin.users')->with('success', 'User updated successfully');
@@ -708,7 +775,11 @@ class Controller extends BaseController
 
 
     function destroyUser(User $user){
+        $email = $user->email;
         $user->delete();
+
+        $this->logActivity('deleted user ' . $email, 'user', $email);
+
         return redirect(route('admin.users'))->with('success', 'User Deleted successfully');
     }
 

@@ -22,7 +22,7 @@ class PermissionController extends Controller
 
         Permission::create(['name' => $request->name, 'guard_name' => 'web']);
 
-        $this->logActivity('created the "' . $request->name . '" permission');
+        $this->logActivity('created the "' . $request->name . '" permission', 'permission');
 
         return redirect()->route('admin.permissions')->with('success', 'Permission created successfully');
     }
@@ -32,7 +32,7 @@ class PermissionController extends Controller
         $permissionName = $permission->name;
         $permission->delete();
 
-        $this->logActivity('deleted the "' . $permissionName . '" permission');
+        $this->logActivity('deleted the "' . $permissionName . '" permission', 'permission');
 
         return redirect()->route('admin.permissions')->with('success', 'Permission deleted successfully');
     }

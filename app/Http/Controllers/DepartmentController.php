@@ -24,7 +24,7 @@ class DepartmentController extends Controller
 
         Department::create(['name' => $request->name, 'slug' => $slug]);
 
-        $this->logActivity('created the "' . $request->name . '" department');
+        $this->logActivity('created the "' . $request->name . '" department', 'department');
 
         return redirect()->route('admin.departments')->with('success', 'Department created successfully');
     }
@@ -35,12 +35,14 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:255|unique:departments,name,' . $department->id,
         ]);
 
+        $oldName = $department->name;
+
         $department->update([
             'name' => $request->name,
             'slug' => \Illuminate\Support\Str::slug($request->name),
         ]);
 
-        $this->logActivity('renamed a department to "' . $request->name . '"');
+        $this->logActivity('renamed the "' . $oldName . '" department to "' . $request->name . '"', 'department');
 
         return redirect()->route('admin.departments')->with('success', 'Department updated successfully');
     }
@@ -55,7 +57,7 @@ class DepartmentController extends Controller
         $name = $department->name;
         $department->delete();
 
-        $this->logActivity('deleted the "' . $name . '" department');
+        $this->logActivity('deleted the "' . $name . '" department', 'department');
 
         return redirect()->route('admin.departments')->with('success', 'Department deleted successfully');
     }

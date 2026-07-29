@@ -10,6 +10,6 @@ class Activity_logs extends Model
 
     protected $table = "activity_logs";
 
-    protected $fillable = ['name', 'email', 'activity'];
+    protected $fillable = ['name', 'email', 'activity', 'category', 'subject_email'];
  
 }

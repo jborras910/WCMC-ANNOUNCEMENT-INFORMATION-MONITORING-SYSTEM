@@ -23,11 +23,22 @@
       <div class="d-flex flex-wrap align-items-end">
         <div class="mr-2 mb-2">
           <label class="small mb-1">Start Date</label>
-          <input type="date" name="start_date" class="form-control form-control-sm" value="{{ old('start_date') }}">
+          <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
         </div>
         <div class="mr-2 mb-2">
           <label class="small mb-1">End Date</label>
-          <input type="date" name="end_date" class="form-control form-control-sm" value="{{ old('end_date') }}">
+          <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
+        </div>
+        <div class="mr-2 mb-2">
+          <label class="small mb-1">Category</label>
+          <select name="category" class="form-control form-control-sm">
+            <option value="">All</option>
+            @foreach($categories as $category)
+              <option value="{{ $category }}" {{ request('category') === $category ? 'selected' : '' }}>
+                {{ ucfirst($category) }}
+              </option>
+            @endforeach
+          </select>
         </div>
         <div class="mb-2">
           <button type="submit" class="btn btn-primary btn-sm mr-1">Filter</button>
@@ -41,7 +52,9 @@
         <thead class="thead-dark">
           <tr>
             <th>Date &amp; Time</th>
+            <th>Category</th>
             <th>Activity</th>
+            <th>Affected Account</th>
             <th>Email</th>
             <th>Name</th>
           </tr>
@@ -50,7 +63,13 @@
           @foreach($Activity_logs as $log)
             <tr>
               <td>{{ $log->created_at->timezone('Asia/Manila')->format('M j, Y g:i a') }}</td>
+              <td>
+                @if($log->category)
+                  <span class="badge badge-secondary">{{ ucfirst($log->category) }}</span>
+                @endif
+              </td>
               <td>{{ $log->activity }}</td>
+              <td>{{ $log->subject_email ?? '—' }}</td>
               <td>{{ $log->email }}</td>
               <td>{{ $log->name }}</td>
             </tr>

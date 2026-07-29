@@ -25,10 +25,12 @@ class RoleController extends Controller
             'permissions.*' => 'exists:permissions,name',
         ]);
 
+        $permissions = $request->permissions ?? [];
         $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
-        $role->syncPermissions($request->permissions ?? []);
+        $role->syncPermissions($permissions);
 
-        $this->logActivity('created the "' . $role->name . '" role');
+        $suffix = $permissions ? ' (permissions: ' . implode(', ', $permissions) . ')' : '';
+        $this->logActivity('created the "' . $role->name . '" role' . $suffix, 'role');
 
         return redirect()->route('admin.roles')->with('success', 'Role created successfully');
     }
@@ -40,9 +42,15 @@ class RoleController extends Controller
             'permissions.*' => 'exists:permissions,name',
         ]);
 
-        $role->syncPermissions($request->permissions ?? []);
+        $before = $role->permissions->pluck('name')->toArray();
+        $after = $request->permissions ?? [];
+        $role->syncPermissions($after);
 
-        $this->logActivity('updated permissions for the "' . $role->name . '" role');
+        $diff = $this->describeSetChanges('permissions', $before, $after);
+        $this->logActivity(
+            'updated the "' . $role->name . '" role' . ($diff ? ' (' . $diff . ')' : ' (no change)'),
+            'role'
+        );
 
         return redirect()->route('admin.roles')->with('success', 'Role permissions updated successfully');
     }
@@ -56,7 +64,7 @@ class RoleController extends Controller
         $roleName = $role->name;
         $role->delete();
 
-        $this->logActivity('deleted the "' . $roleName . '" role');
+        $this->logActivity('deleted the "' . $roleName . '" role', 'role');
 
         return redirect()->route('admin.roles')->with('success', 'Role deleted successfully');
     }
