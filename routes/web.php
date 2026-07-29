@@ -17,10 +17,6 @@ use App\Http\Controllers\DepartmentController;
 */
 
 
-route::get('test/page', function (){
-    dd(phpinfo());
-});
-
 //user and guest
 Route::get('/', [Controller::class, 'welcome'])->name('welcome');
 Route::get('/welcome-queue', [Controller::class, 'welcomeQueue'])->name('welcomeQueue');
